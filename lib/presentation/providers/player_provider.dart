@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/player_model.dart';
+import '../../data/datasources/local/world_cup_players_data.dart';
 
 final playerListProvider = StateNotifierProvider<PlayerListNotifier, AsyncValue<List<PlayerModel>>>((ref) {
   return PlayerListNotifier();
@@ -16,7 +17,7 @@ final playerDetailProvider = FutureProvider.family<PlayerModel?, String>((ref, i
   try {
     return players.firstWhere((p) => p.id == id);
   } catch (_) {
-    return null;
+    return WorldCupPlayersData.getById(id);
   }
 });
 
@@ -27,7 +28,9 @@ final playersByTeamProvider = FutureProvider.family<List<PlayerModel>, String>((
     loading: () => <PlayerModel>[],
     error: (_, __) => <PlayerModel>[],
   );
-  return players.where((p) => p.teamId == teamId).toList();
+  final apiPlayers = players.where((p) => p.teamId == teamId).toList();
+  if (apiPlayers.isNotEmpty) return apiPlayers;
+  return WorldCupPlayersData.getByTeam(teamId);
 });
 
 final playerSearchProvider = StateProvider<String>((ref) => '');
@@ -70,10 +73,17 @@ final topAssistsProvider = Provider<AsyncValue<List<PlayerModel>>>((ref) {
 });
 
 class PlayerListNotifier extends StateNotifier<AsyncValue<List<PlayerModel>>> {
-  PlayerListNotifier() : super(const AsyncValue.data([]));
+  PlayerListNotifier() : super(const AsyncValue.loading()) {
+    loadPlayers();
+  }
 
   Future<void> loadPlayers() async {
-    state = const AsyncValue.data([]);
+    try {
+      final players = WorldCupPlayersData.getAll();
+      if (mounted) state = AsyncValue.data(players);
+    } catch (e, st) {
+      if (mounted) state = AsyncValue.data([]);
+    }
   }
 
   Future<void> refresh() async {

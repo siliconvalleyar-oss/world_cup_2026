@@ -11,15 +11,16 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
+    final isDark = settings.themeMode == ThemeMode.dark;
 
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: isDark ? AppConstants.backgroundColor : const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: AppConstants.backgroundColor,
-        title: const Text(
-          'Settings',
+        backgroundColor: isDark ? AppConstants.backgroundColor : const Color(0xFFF5F5F5),
+        title: Text(
+          settings.language == 'es' ? 'Configuración' : 'Settings',
           style: TextStyle(
-            color: Colors.white,
+            color: isDark ? Colors.white : const Color(0xFF0A0A0A),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -27,58 +28,52 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildAppearanceSection(context, ref, settings),
+          _buildAppearanceSection(context, ref, settings, isDark),
           const SizedBox(height: 24),
-          _buildNotificationsSection(context, ref, settings),
+          _buildLanguageSection(context, ref, settings, isDark),
           const SizedBox(height: 24),
-          _buildAboutSection(),
+          _buildNotificationsSection(context, ref, settings, isDark),
+          const SizedBox(height: 24),
+          _buildAboutSection(isDark),
           const SizedBox(height: 100),
         ],
       ),
     );
   }
 
-  Widget _buildAppearanceSection(BuildContext context, WidgetRef ref, AppSettings settings) {
+  Widget _buildAppearanceSection(BuildContext context, WidgetRef ref, AppSettings settings, bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF0A0A0A);
+    final subtitleColor = isDark ? AppConstants.secondaryTextColor : const Color(0xFF666666);
+    final cardBg = isDark ? AppConstants.cardColor : Colors.white;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Appearance',
+        Text(
+          settings.language == 'es' ? 'Apariencia' : 'Appearance',
           style: TextStyle(
-            color: AppConstants.primaryColor,
+            color: isDark ? AppConstants.primaryColor : AppConstants.primaryColor,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
         const SizedBox(height: 12),
         GlassmorphismCard(
+          backgroundColor: cardBg,
           child: Column(
             children: [
               _buildSwitchTile(
                 icon: Icons.dark_mode,
-                title: 'Dark Mode',
-                subtitle: 'Use dark theme',
+                title: settings.language == 'es' ? 'Modo Oscuro' : 'Dark Mode',
+                subtitle: settings.language == 'es' ? 'Usar tema oscuro' : 'Use dark theme',
                 value: settings.themeMode == ThemeMode.dark,
+                textColor: textColor,
+                subtitleColor: subtitleColor,
                 onChanged: (value) {
                   ref.read(settingsProvider.notifier).setThemeMode(
                         value ? ThemeMode.dark : ThemeMode.light,
                       );
                 },
-              ),
-              const Divider(color: AppConstants.cardColor),
-              ListTile(
-                leading: const Icon(Icons.language, color: AppConstants.secondaryColor),
-                title: const Text(
-                  'Language',
-                  style: TextStyle(color: Colors.white),
-                ),
-                subtitle: Text(
-                  settings.language.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppConstants.secondaryTextColor,
-                    fontSize: 12,
-                  ),
-                ),
               ),
             ],
           ),
@@ -87,24 +82,172 @@ class SettingsScreen extends ConsumerWidget {
     ).animate().fadeIn(duration: 300.ms);
   }
 
+  Widget _buildLanguageSection(BuildContext context, WidgetRef ref, AppSettings settings, bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF0A0A0A);
+    final subtitleColor = isDark ? AppConstants.secondaryTextColor : const Color(0xFF666666);
+    final cardBg = isDark ? AppConstants.cardColor : Colors.white;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          settings.language == 'es' ? 'Idioma' : 'Language',
+          style: TextStyle(
+            color: isDark ? AppConstants.primaryColor : AppConstants.primaryColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 12),
+        GlassmorphismCard(
+          backgroundColor: cardBg,
+          child: Column(
+            children: [
+              _buildRadioTile(
+                icon: Icons.language,
+                title: 'English',
+                value: 'en',
+                groupValue: settings.language,
+                textColor: textColor,
+                subtitleColor: subtitleColor,
+                onChanged: (value) {
+                  ref.read(settingsProvider.notifier).setLanguage(value!);
+                },
+              ),
+              Divider(color: cardBg == Colors.white ? const Color(0xFFEEEEEE) : AppConstants.cardColor),
+              _buildRadioTile(
+                icon: Icons.language,
+                title: 'Español',
+                value: 'es',
+                groupValue: settings.language,
+                textColor: textColor,
+                subtitleColor: subtitleColor,
+                onChanged: (value) {
+                  ref.read(settingsProvider.notifier).setLanguage(value!);
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    ).animate().fadeIn(delay: 100.ms, duration: 300.ms);
+  }
+
+  Widget _buildRadioTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String groupValue,
+    required Color textColor,
+    required Color subtitleColor,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return RadioListTile<String>(
+      secondary: Icon(icon, color: AppConstants.primaryColor),
+      title: Text(
+        title,
+        style: TextStyle(color: textColor),
+      ),
+      value: value,
+      groupValue: groupValue,
+      activeColor: AppConstants.primaryColor,
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildNotificationsSection(BuildContext context, WidgetRef ref, AppSettings settings, bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF0A0A0A);
+    final subtitleColor = isDark ? AppConstants.secondaryTextColor : const Color(0xFF666666);
+    final cardBg = isDark ? AppConstants.cardColor : Colors.white;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          settings.language == 'es' ? 'Notificaciones' : 'Notifications',
+          style: TextStyle(
+            color: isDark ? AppConstants.primaryColor : AppConstants.primaryColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 12),
+        GlassmorphismCard(
+          backgroundColor: cardBg,
+          child: _buildSwitchTile(
+            icon: Icons.notifications,
+            title: settings.language == 'es' ? 'Notificaciones Push' : 'Push Notifications',
+            subtitle: settings.language == 'es' ? 'Recibir actualizaciones de partidos' : 'Receive match updates',
+            value: settings.notificationsEnabled,
+            textColor: textColor,
+            subtitleColor: subtitleColor,
+            onChanged: (value) {
+              ref.read(settingsProvider.notifier).toggleNotifications();
+            },
+          ),
+        ),
+      ],
+    ).animate().fadeIn(delay: 200.ms, duration: 300.ms);
+  }
+
+  Widget _buildAboutSection(bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF0A0A0A);
+    final subtitleColor = isDark ? AppConstants.secondaryTextColor : const Color(0xFF666666);
+    final cardBg = isDark ? AppConstants.cardColor : Colors.white;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'World Cup 2026',
+          style: TextStyle(
+            color: isDark ? AppConstants.primaryColor : AppConstants.primaryColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 12),
+        GlassmorphismCard(
+          backgroundColor: cardBg,
+          child: ListTile(
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.sports_soccer, color: Colors.white, size: 28),
+            ),
+            title: Text(
+              'World Cup 2026 Premium',
+              style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              'v1.0.0',
+              style: TextStyle(color: subtitleColor),
+            ),
+          ),
+        ),
+      ],
+    ).animate().fadeIn(delay: 300.ms, duration: 300.ms);
+  }
+
   Widget _buildSwitchTile({
     required IconData icon,
     required String title,
     required String subtitle,
     required bool value,
+    required Color textColor,
+    required Color subtitleColor,
     required ValueChanged<bool> onChanged,
   }) {
     return ListTile(
       leading: Icon(icon, color: AppConstants.primaryColor),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(
-            color: AppConstants.secondaryTextColor, fontSize: 12),
-      ),
+      title: Text(title, style: TextStyle(color: textColor)),
+      subtitle: Text(subtitle, style: TextStyle(color: subtitleColor, fontSize: 12)),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
@@ -112,89 +255,5 @@ class SettingsScreen extends ConsumerWidget {
         activeTrackColor: AppConstants.primaryColor.withValues(alpha: 0.3),
       ),
     );
-  }
-
-  Widget _buildNotificationsSection(BuildContext context, WidgetRef ref, AppSettings settings) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Notifications',
-          style: TextStyle(
-            color: AppConstants.primaryColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 12),
-        GlassmorphismCard(
-          child: _buildSwitchTile(
-            icon: Icons.notifications,
-            title: 'Push Notifications',
-            subtitle: 'Receive match updates',
-            value: settings.notificationsEnabled,
-            onChanged: (value) {
-              ref.read(settingsProvider.notifier).toggleNotifications();
-            },
-          ),
-        ),
-      ],
-    ).animate().fadeIn(delay: 100.ms, duration: 300.ms);
-  }
-
-  Widget _buildAboutSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'About',
-          style: TextStyle(
-            color: AppConstants.primaryColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 12),
-        GlassmorphismCard(
-          child: Column(
-            children: [
-              ListTile(
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        AppConstants.primaryColor,
-                        AppConstants.secondaryColor,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.sports_soccer,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                title: const Text(
-                  'World Cup 2026',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Version 1.0.0',
-                  style: TextStyle(
-                    color: AppConstants.secondaryTextColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ).animate().fadeIn(delay: 200.ms, duration: 300.ms);
   }
 }

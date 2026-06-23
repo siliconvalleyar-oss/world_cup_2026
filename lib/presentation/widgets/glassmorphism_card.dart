@@ -10,6 +10,7 @@ class GlassmorphismCard extends StatelessWidget {
   final double opacity;
   final double blur;
   final Color? borderColor;
+  final Color? backgroundColor;
   final VoidCallback? onTap;
 
   const GlassmorphismCard({
@@ -21,6 +22,7 @@ class GlassmorphismCard extends StatelessWidget {
     this.opacity = 0.1,
     this.blur = 16,
     this.borderColor,
+    this.backgroundColor,
     this.onTap,
   });
 
@@ -35,17 +37,20 @@ class GlassmorphismCard extends StatelessWidget {
         child: Container(
           margin: margin,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(opacity),
-                Colors.white.withOpacity(opacity * 0.5),
-              ],
-            ),
+            color: backgroundColor,
+            gradient: backgroundColor != null
+                ? null
+                : LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: opacity),
+                      Colors.white.withValues(alpha: opacity * 0.5),
+                    ],
+                  ),
             borderRadius: radius,
             border: Border.all(
-              color: borderColor ?? Colors.white.withOpacity(0.2),
+              color: borderColor ?? Colors.white.withValues(alpha: 0.2),
               width: 1,
             ),
           ),

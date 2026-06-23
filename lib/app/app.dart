@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:world_cup_2026/core/constants/app_constants.dart';
 import 'package:world_cup_2026/core/theme/app_theme.dart';
+import 'package:world_cup_2026/presentation/providers/settings_provider.dart';
 import 'package:world_cup_2026/presentation/screens/splash/splash_screen.dart';
 import 'package:world_cup_2026/presentation/screens/home/home_screen.dart';
 import 'package:world_cup_2026/presentation/screens/fixture/fixture_screen.dart';
@@ -185,11 +187,23 @@ class WorldCupApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goRouter = ref.watch(goRouterProvider);
+    final settings = ref.watch(settingsProvider);
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Color(0xFF0A0A0A),
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
 
     return MaterialApp.router(
       title: 'World Cup 2026',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: settings.themeMode,
       routerConfig: goRouter,
       builder: (context, child) {
         return MediaQuery(

@@ -27,6 +27,8 @@ class AppSettings {
 }
 
 class SettingsNotifier extends StateNotifier<AppSettings> {
+  static String currentLanguage = 'en';
+
   SettingsNotifier() : super(const AppSettings()) {
     _loadFromHive();
   }
@@ -43,6 +45,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       final notifications = box.get(_notificationsKey, defaultValue: true) as bool;
       final language = box.get(_languageKey, defaultValue: 'en') as String;
 
+      currentLanguage = language;
       state = AppSettings(
         themeMode: ThemeMode.values[themeIndex],
         notificationsEnabled: notifications,
@@ -71,6 +74,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   Future<void> setLanguage(String lang) async {
+    currentLanguage = lang;
     state = state.copyWith(language: lang);
     await _saveToHive();
   }
