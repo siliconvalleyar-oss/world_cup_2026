@@ -76,12 +76,16 @@ app.*.map.json
 # Windows
 **/windows/flutter/ephemeral/
 
-# Platform
-**/android/
-**/ios/
-**/linux/
-**/macos/
-**/windows/
+# Platform build dirs
+**/android/.gradle
+**/android/build/
+**/android/app/build/
+**/ios/Pods/
+**/ios/build/
+**/linux/flutter/ephemeral/
+**/macos/Pods/
+**/macos/build/
+**/windows/flutter/ephemeral/
 **/web/
 
 # Generated files
