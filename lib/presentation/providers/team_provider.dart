@@ -45,13 +45,12 @@ class TeamListNotifier extends StateNotifier<AsyncValue<List<TeamModel>>> {
   }
 
   Future<void> loadTeams() async {
-    state = const AsyncValue.loading();
     try {
       final service = ref.read(theSportsDBServiceProvider);
       final teams = await service.getTeamsFromStandings();
-      state = AsyncValue.data(teams);
+      if (mounted) state = AsyncValue.data(teams);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) state = AsyncValue.data([]);
     }
   }
 

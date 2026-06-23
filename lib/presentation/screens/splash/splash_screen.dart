@@ -25,13 +25,13 @@ class _SplashScreenState extends State<SplashScreen> {
       _loadingText = 'Loading data...';
     });
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 2500));
 
     setState(() {
       _loadingText = 'Ready!';
     });
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 800));
     _navigateToHome();
   }
 

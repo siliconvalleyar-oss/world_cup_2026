@@ -45,13 +45,12 @@ class StadiumListNotifier extends StateNotifier<AsyncValue<List<VenueModel>>> {
   }
 
   Future<void> loadStadiums() async {
-    state = const AsyncValue.loading();
     try {
       final service = ref.read(theSportsDBServiceProvider);
       final venues = await service.getVenues();
-      state = AsyncValue.data(venues);
+      if (mounted) state = AsyncValue.data(venues);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) state = AsyncValue.data([]);
     }
   }
 

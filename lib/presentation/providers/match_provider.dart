@@ -69,13 +69,12 @@ class MatchListNotifier extends StateNotifier<AsyncValue<List<MatchModel>>> {
   }
 
   Future<void> loadMatches() async {
-    state = const AsyncValue.loading();
     try {
       final service = ref.read(theSportsDBServiceProvider);
       final matches = await service.getMatches();
-      state = AsyncValue.data(matches);
+      if (mounted) state = AsyncValue.data(matches);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) state = AsyncValue.data([]);
     }
   }
 
