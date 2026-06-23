@@ -1,0 +1,130 @@
+class WorldCupScorers {
+  WorldCupScorers._();
+
+  static final List<Map<String, dynamic>> _scorersData = [
+    {
+      'name': 'Lionel Messi',
+      'team': 'Argentina',
+      'teamId': '134509',
+      'goals': 5,
+      'position': 'Forward',
+      'nationality': 'Argentina',
+    },
+    {
+      'name': 'Erling Haaland',
+      'team': 'Norway',
+      'teamId': '136516',
+      'goals': 4,
+      'position': 'Forward',
+      'nationality': 'Norway',
+    },
+    {
+      'name': 'Kylian Mbappé',
+      'team': 'France',
+      'teamId': '133913',
+      'goals': 4,
+      'position': 'Forward',
+      'nationality': 'France',
+    },
+    {
+      'name': 'Deniz Undav',
+      'team': 'Germany',
+      'teamId': '133907',
+      'goals': 3,
+      'position': 'Forward',
+      'nationality': 'Germany',
+    },
+    {
+      'name': 'Jonathan David',
+      'team': 'Canada',
+      'teamId': '140073',
+      'goals': 3,
+      'position': 'Forward',
+      'nationality': 'Canada',
+    },
+    {
+      'name': 'Daichi Kamada',
+      'team': 'Japan',
+      'teamId': '134503',
+      'goals': 3,
+      'position': 'Midfielder',
+      'nationality': 'Japan',
+    },
+    {
+      'name': 'Matheus Cunha',
+      'team': 'Brazil',
+      'teamId': '134496',
+      'goals': 2,
+      'position': 'Forward',
+      'nationality': 'Brazil',
+    },
+    {
+      'name': 'Vinícius Jr.',
+      'team': 'Brazil',
+      'teamId': '134496',
+      'goals': 2,
+      'position': 'Forward',
+      'nationality': 'Brazil',
+    },
+    {
+      'name': 'Cody Gakpo',
+      'team': 'Netherlands',
+      'teamId': '133905',
+      'goals': 2,
+      'position': 'Forward',
+      'nationality': 'Netherlands',
+    },
+    {
+      'name': 'Brian Brobbey',
+      'team': 'Netherlands',
+      'teamId': '133905',
+      'goals': 2,
+      'position': 'Forward',
+      'nationality': 'Netherlands',
+    },
+    {
+      'name': 'Harry Kane',
+      'team': 'England',
+      'teamId': '133914',
+      'goals': 2,
+      'position': 'Forward',
+      'nationality': 'England',
+    },
+    {
+      'name': 'Jude Bellingham',
+      'team': 'England',
+      'teamId': '133914',
+      'goals': 1,
+      'position': 'Midfielder',
+      'nationality': 'England',
+    },
+    {
+      'name': 'Mikel Oyarzabal',
+      'team': 'Spain',
+      'teamId': '133909',
+      'goals': 2,
+      'position': 'Forward',
+      'nationality': 'Spain',
+    },
+    {
+      'name': 'Dejan Kulusevski',
+      'team': 'Sweden',
+      'teamId': '136516',
+      'goals': 2,
+      'position': 'Midfielder',
+      'nationality': 'Sweden',
+    },
+    {
+      'name': 'Sadio Mané',
+      'team': 'Senegal',
+      'teamId': '136143',
+      'goals': 2,
+      'position': 'Forward',
+      'nationality': 'Senegal',
+    },
+  ];
+
+  static List<Map<String, dynamic>> getAll() {
+    return List<Map<String, dynamic>>.from(_scorersData);
+  }
+}

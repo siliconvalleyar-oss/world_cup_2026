@@ -37,6 +37,7 @@ class TheSportsDBService {
     } catch (_) {}
 
     final localMatches = WorldCupFixtures.getGroupStageMatches();
+    print('WC2026: Local matches loaded: ${localMatches.length}');
 
     final Map<String, MatchModel> merged = {};
     for (final m in localMatches) {
@@ -53,7 +54,9 @@ class TheSportsDBService {
       }
     }
 
-    return merged.values.toList()..sort((a, b) => a.date.compareTo(b.date));
+    final result = merged.values.toList()..sort((a, b) => a.date.compareTo(b.date));
+    print('WC2026: Total matches after merge: ${result.length}');
+    return result;
   }
 
   Future<List<MatchModel>> getNextMatches() async {
@@ -73,6 +76,7 @@ class TheSportsDBService {
 
   Future<List<TeamModel>> getTeamsFromStandings() async {
     final localTeams = WorldCupLocalData.getTeams();
+    print('WC2026: Local teams loaded: ${localTeams.length}');
     final Map<String, TeamModel> teamsMap = {};
     for (final t in localTeams) {
       teamsMap[t.id] = t;
@@ -119,6 +123,7 @@ class TheSportsDBService {
 
   Future<List<GroupModel>> getGroups() async {
     final localGroups = WorldCupLocalData.getGroups();
+    print('WC2026: Local groups loaded: ${localGroups.length}');
 
     try {
       final response = await _dio.get(
@@ -205,6 +210,10 @@ class TheSportsDBService {
     } catch (_) {}
 
     localGroups.sort((a, b) => a.name.compareTo(b.name));
+    print('WC2026: Final groups: ${localGroups.length}');
+    for (final g in localGroups) {
+      print('WC2026:   Group ${g.name}: ${g.teams.length} teams');
+    }
     return localGroups;
   }
 
