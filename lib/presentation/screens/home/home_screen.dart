@@ -13,7 +13,6 @@ import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/match_card.dart';
 import 'package:world_cup_2026/presentation/widgets/section_header.dart';
 import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
 import 'package:world_cup_2026/presentation/widgets/shimmer_loading.dart';
 import 'package:world_cup_2026/presentation/widgets/team_flag.dart';
 import 'package:intl/intl.dart';
@@ -32,6 +31,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(newsListProvider.notifier).loadNews(),
       ref.read(teamListProvider.notifier).loadTeams(),
     ]);
+  }
+
+  void _safeRefresh(ProviderBase provider) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.invalidate(provider);
+    });
   }
 
   @override
@@ -85,23 +90,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          RefreshIndicator(
-            onRefresh: _onRefresh,
-            color: AppConstants.primaryColor,
-            backgroundColor: AppConstants.cardColor,
-            child: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildLiveMatchesSection(liveMatches),
-                const SizedBox(height: 24),
-                _buildUpcomingMatchesSection(matchList),
-                const SizedBox(height: 24),
-                _buildRecentResultsSection(matchList),
-                const SizedBox(height: 24),
-                _buildFeaturedNewsSection(newsList),
-                const SizedBox(height: 24),
-                _buildFeaturedTeamsSection(teamList),
-                const SizedBox(height: 100),
-              ]),
+          SliverToBoxAdapter(
+            child: RefreshIndicator(
+              onRefresh: _onRefresh,
+              color: AppConstants.primaryColor,
+              backgroundColor: AppConstants.cardColor,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLiveMatchesSection(liveMatches),
+                  const SizedBox(height: 24),
+                  _buildUpcomingMatchesSection(matchList),
+                  const SizedBox(height: 24),
+                  _buildRecentResultsSection(matchList),
+                  const SizedBox(height: 24),
+                  _buildFeaturedNewsSection(newsList),
+                  const SizedBox(height: 24),
+                  _buildFeaturedTeamsSection(teamList),
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
         ],
@@ -113,9 +121,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
+        const SectionHeader(
           title: 'Live Matches',
-          onSeeAll: () {},
           showSeeAll: false,
         ),
         const SizedBox(height: 12),
@@ -161,10 +168,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
             ),
-            error: (error, stack) => Center(
-              child: AppErrorWidget(
-                message: error.toString(),
-                onRetry: () => ref.refresh(liveMatchesProvider),
+            error: (_, __) => const Center(
+              child: EmptyState(
+                icon: Icons.wifi_off,
+                title: 'Connection error',
+                subtitle: 'Pull to refresh',
               ),
             ),
           ),
@@ -223,10 +231,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             }),
           ),
-          error: (error, stack) => Center(
-            child: AppErrorWidget(
-              message: error.toString(),
-              onRetry: () => ref.refresh(matchListProvider),
+          error: (_, __) => const Padding(
+            padding: EdgeInsets.all(16),
+            child: EmptyState(
+              icon: Icons.wifi_off,
+              title: 'Connection error',
+              subtitle: 'Pull to refresh',
             ),
           ),
         ),
@@ -238,9 +248,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
+        const SectionHeader(
           title: 'Recent Results',
-          onSeeAll: () {},
           showSeeAll: false,
         ),
         const SizedBox(height: 12),
@@ -285,10 +294,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             }),
           ),
-          error: (error, stack) => Center(
-            child: AppErrorWidget(
-              message: error.toString(),
-              onRetry: () => ref.refresh(matchListProvider),
+          error: (_, __) => const Padding(
+            padding: EdgeInsets.all(16),
+            child: EmptyState(
+              icon: Icons.wifi_off,
+              title: 'Connection error',
+              subtitle: 'Pull to refresh',
             ),
           ),
         ),
@@ -407,10 +418,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
             ),
-            error: (error, stack) => Center(
-              child: AppErrorWidget(
-                message: error.toString(),
-                onRetry: () => ref.refresh(newsListProvider),
+            error: (_, __) => const Center(
+              child: EmptyState(
+                icon: Icons.wifi_off,
+                title: 'Connection error',
+                subtitle: 'Pull to refresh',
               ),
             ),
           ),
@@ -502,10 +514,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
             ),
-            error: (error, stack) => Center(
-              child: AppErrorWidget(
-                message: error.toString(),
-                onRetry: () => ref.refresh(teamListProvider),
+            error: (_, __) => const Center(
+              child: EmptyState(
+                icon: Icons.wifi_off,
+                title: 'Connection error',
+                subtitle: 'Pull to refresh',
               ),
             ),
           ),
