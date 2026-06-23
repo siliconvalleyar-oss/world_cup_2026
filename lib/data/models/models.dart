@@ -1,0 +1,11 @@
+export 'match_model.dart';
+export 'team_model.dart';
+export 'player_model.dart';
+export 'group_model.dart';
+export 'standing_model.dart';
+export 'statistic_model.dart';
+export 'venue_model.dart';
+export 'news_model.dart';
+export 'event_model.dart';
+export 'match_statistics.dart';
+export 'lineups.dart';
