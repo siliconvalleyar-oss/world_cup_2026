@@ -57,7 +57,7 @@ class WorldCupFixtures {
     _MatchFixture('GE01', '133907', '136477', '2026-06-14T17:00:00', 1, 'E', 7, 1, '8'),
     _MatchFixture('GE02', '136141', '134507', '2026-06-14T20:00:00', 1, 'E', 1, 0, '14'),
     _MatchFixture('GE03', '133907', '136141', '2026-06-20T17:00:00', 2, 'E', 2, 1, '10'),
-    _MatchFixture('GE04', '134507', '136477', '2026-06-20T20:00:00', 2, 'E', 0, 0, '15'),
+    _MatchFixture('GE04', '134507', '136477', '2026-06-20T20:00:00', 2, 'E', 3, 1, '15'),
     _MatchFixture('GE05', '136477', '136141', '2026-06-25T17:00:00', 3, 'E', 0, 0, '14', isScheduled: true),
     _MatchFixture('GE06', '134507', '133907', '2026-06-25T17:00:00', 3, 'E', 0, 0, '2', isScheduled: true),
 
@@ -72,13 +72,13 @@ class WorldCupFixtures {
     // === GROUP G ===
     _MatchFixture('GG01', '134515', '136138', '2026-06-15T16:00:00', 1, 'G', 1, 1, '6'),
     _MatchFixture('GG02', '134511', '136517', '2026-06-15T20:00:00', 1, 'G', 2, 2, '8'),
-    _MatchFixture('GG03', '134515', '134511', '2026-06-21T17:00:00', 2, 'G', 0, 0, '8'),
+    _MatchFixture('GG03', '134515', '134511', '2026-06-21T17:00:00', 2, 'G', 2, 0, '8'),
     _MatchFixture('GG04', '136517', '136138', '2026-06-21T20:00:00', 2, 'G', 1, 3, '11'),
     _MatchFixture('GG05', '136138', '134511', '2026-06-26T17:00:00', 3, 'G', 0, 0, '6', isScheduled: true),
     _MatchFixture('GG06', '136517', '134515', '2026-06-26T17:00:00', 3, 'G', 0, 0, '11', isScheduled: true),
 
     // === GROUP H ===
-    _MatchFixture('GH01', '133909', '136477', '2026-06-15T16:00:00', 1, 'H', 0, 0, '14'),
+    _MatchFixture('GH01', '133909', '136477', '2026-06-15T16:00:00', 1, 'H', 3, 0, '14'),
     _MatchFixture('GH02', '134527', '134504', '2026-06-15T20:00:00', 1, 'H', 1, 1, '5'),
     _MatchFixture('GH03', '133909', '134527', '2026-06-21T17:00:00', 2, 'H', 4, 0, '14'),
     _MatchFixture('GH04', '134504', '136477', '2026-06-21T20:00:00', 2, 'H', 2, 2, '5'),
@@ -118,13 +118,38 @@ class WorldCupFixtures {
     _MatchFixture('GL06', '133914', '134513', '2026-06-27T17:00:00', 3, 'L', 0, 0, '15', isScheduled: true),
   ];
 
+  // === ROUND OF 32 (Knockout Stage) ===
+  // Confirmed: 1st from groups with 6pts (mathematically certain)
+  // Pending: 2nd/3rd place determined after Matchday 3
+  static final List<_KnockoutFixture> _knockoutFixtures = [
+    _KnockoutFixture('R32_01', '134497', null, '2026-06-30T17:00:00', 'Round of 32', '1', true),   // 1A (Mexico) vs TBD
+    _KnockoutFixture('R32_02', null, null, '2026-06-30T20:00:00', 'Round of 32', '2', false),       // TBD vs TBD
+    _KnockoutFixture('R32_03', '134514', null, '2026-07-01T17:00:00', 'Round of 32', '3', true),    // 1D (USA) vs TBD
+    _KnockoutFixture('R32_04', null, null, '2026-07-01T20:00:00', 'Round of 32', '4', false),       // TBD vs TBD
+    _KnockoutFixture('R32_05', '133907', null, '2026-07-02T17:00:00', 'Round of 32', '5', true),    // 1E (Germany) vs TBD
+    _KnockoutFixture('R32_06', null, null, '2026-07-02T20:00:00', 'Round of 32', '6', false),       // TBD vs TBD
+    _KnockoutFixture('R32_07', '133913', null, '2026-07-03T17:00:00', 'Round of 32', '7', true),    // 1I (France) vs TBD
+    _KnockoutFixture('R32_08', null, null, '2026-07-03T20:00:00', 'Round of 32', '8', false),       // TBD vs TBD
+    _KnockoutFixture('R32_09', '134509', null, '2026-07-04T17:00:00', 'Round of 32', '9', true),    // 1J (Argentina) vs TBD
+    _KnockoutFixture('R32_10', null, null, '2026-07-04T20:00:00', 'Round of 32', '10', false),      // TBD vs TBD
+    _KnockoutFixture('R32_11', null, null, '2026-07-05T17:00:00', 'Round of 32', '11', false),      // TBD vs TBD
+    _KnockoutFixture('R32_12', null, null, '2026-07-05T20:00:00', 'Round of 32', '12', false),      // TBD vs TBD
+    _KnockoutFixture('R32_13', null, null, '2026-07-06T17:00:00', 'Round of 32', '13', false),      // TBD vs TBD
+    _KnockoutFixture('R32_14', null, null, '2026-07-06T20:00:00', 'Round of 32', '14', false),      // TBD vs TBD
+    _KnockoutFixture('R32_15', null, null, '2026-07-07T17:00:00', 'Round of 32', '15', false),      // TBD vs TBD
+    _KnockoutFixture('R32_16', null, null, '2026-07-07T20:00:00', 'Round of 32', '16', false),      // TBD vs TBD
+  ];
+
   static List<MatchModel> getGroupStageMatches() {
     final allTeams = WorldCupLocalData.getTeams();
     final allVenues = WorldCupLocalData.getVenues();
     final teamsMap = {for (var t in allTeams) t.id: t};
     final venuesMap = {for (var v in allVenues) v.id: v};
 
-    return _fixtures.map((f) {
+    final matches = <MatchModel>[];
+
+    // Group stage matches
+    for (final f in _fixtures) {
       final home = teamsMap[f.homeTeamId];
       final away = teamsMap[f.awayTeamId];
       final venueForMatch = venuesMap[f.venueId];
@@ -136,7 +161,7 @@ class WorldCupFixtures {
         matchDate = DateTime(2026, 6, 11);
       }
 
-      return MatchModel(
+      matches.add(MatchModel(
         id: f.fixtureId,
         homeTeamId: f.homeTeamId,
         awayTeamId: f.awayTeamId,
@@ -147,10 +172,46 @@ class WorldCupFixtures {
         status: f.isScheduled ? 'scheduled' : 'finished',
         matchday: f.matchday,
         group: f.group,
+        stage: 'group_stage',
         venue: venueForMatch,
         date: matchDate,
-      );
-    }).toList();
+      ));
+    }
+
+    // Knockout stage matches
+    for (final f in _knockoutFixtures) {
+      final home = f.homeTeamId != null ? teamsMap[f.homeTeamId] : null;
+      final away = f.awayTeamId != null ? teamsMap[f.awayTeamId] : null;
+      final venueForMatch = f.venueId != null ? venuesMap[f.venueId] : null;
+
+      DateTime matchDate;
+      try {
+        matchDate = DateTime.parse(f.dateStr);
+      } catch (_) {
+        matchDate = DateTime(2026, 6, 30);
+      }
+
+      matches.add(MatchModel(
+        id: f.fixtureId,
+        homeTeamId: f.homeTeamId ?? '',
+        awayTeamId: f.awayTeamId ?? '',
+        homeTeam: home,
+        awayTeam: away,
+        homeScore: f.homeScore,
+        awayScore: f.awayScore,
+        status: f.isConfirmed ? 'scheduled' : 'pending',
+        group: null,
+        stage: 'round_of_32',
+        venue: venueForMatch,
+        date: matchDate,
+      ));
+    }
+
+    return matches;
+  }
+
+  static List<MatchModel> getKnockoutMatches() {
+    return getGroupStageMatches().where((m) => m.stage != 'group_stage').toList();
   }
 }
 
@@ -177,5 +238,29 @@ class _MatchFixture {
     this.awayScore,
     this.venueId, {
     this.isScheduled = false,
+  });
+}
+
+class _KnockoutFixture {
+  final String fixtureId;
+  final String? homeTeamId;
+  final String? awayTeamId;
+  final String dateStr;
+  final String stage;
+  final String venueId;
+  final bool isConfirmed;
+  final int homeScore;
+  final int awayScore;
+
+  _KnockoutFixture(
+    this.fixtureId,
+    this.homeTeamId,
+    this.awayTeamId,
+    this.dateStr,
+    this.stage,
+    this.venueId,
+    this.isConfirmed, {
+    this.homeScore = 0,
+    this.awayScore = 0,
   });
 }

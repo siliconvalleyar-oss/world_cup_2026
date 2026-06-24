@@ -85,6 +85,46 @@ class MatchCard extends StatelessWidget {
   }
 
   Widget _buildScoreRow() {
+    if (isScheduled || match.status == 'pending') {
+      return Row(
+        children: [
+          Expanded(
+            child: _TeamInfo(
+              name: match.homeTeam?.name ?? 'TBD',
+              flag: match.homeTeam?.flag,
+              alignment: CrossAxisAlignment.end,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                Text(
+                  match.time ?? DateFormat('HH:mm').format(match.date),
+                  style: AppTypography.headlineSmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  DateFormat('MMM d').format(match.date),
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _TeamInfo(
+              name: match.awayTeam?.name ?? 'TBD',
+              flag: match.awayTeam?.flag,
+              alignment: CrossAxisAlignment.start,
+            ),
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         Expanded(
