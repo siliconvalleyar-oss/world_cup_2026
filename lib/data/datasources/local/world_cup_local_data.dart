@@ -28,7 +28,7 @@ class WorldCupLocalData {
     // Group D
     {'id': '134514', 'name': 'United States', 'code': 'USA', 'group': 'D', 'ranking': 11, 'confederation': 'CONCACAF', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/21f0oi1597948195.png', 'coach': 'Mauricio Pochettino'},
     {'id': '134500', 'name': 'Australia', 'code': 'AUS', 'group': 'D', 'ranking': 17, 'confederation': 'AFC', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/eylq8x1726166853.png', 'coach': 'Tony Popovic'},
-    {'id': '136471', 'name': 'Paraguay', 'code': 'PAR', 'group': 'D', 'ranking': 28, 'confederation': 'CONMEBOL', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/rwqqpq1473502965.png', 'coach': 'Gustavo Alfaro'},
+    {'id': '137005', 'name': 'Paraguay', 'code': 'PAR', 'group': 'D', 'ranking': 28, 'confederation': 'CONMEBOL', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/rwqqpq1473502965.png', 'coach': 'Gustavo Alfaro'},
     {'id': '135982', 'name': 'Turkey', 'code': 'TUR', 'group': 'D', 'ranking': 21, 'confederation': 'UEFA', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Vincenzo Montella'},
 
     // Group E
@@ -52,12 +52,12 @@ class WorldCupLocalData {
     // Group H
     {'id': '133909', 'name': 'Spain', 'code': 'ESP', 'group': 'H', 'ranking': 3, 'confederation': 'UEFA', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/ncgqyr1726166942.png', 'coach': 'Luis de la Fuente'},
     {'id': '134504', 'name': 'Uruguay', 'code': 'URU', 'group': 'H', 'ranking': 16, 'confederation': 'CONMEBOL', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/6vjbr11726167756.png', 'coach': 'Marcelo Bielsa'},
-    {'id': '136477', 'name': 'Cape Verde', 'code': 'CPV', 'group': 'H', 'ranking': 46, 'confederation': 'CAF', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Bubista'},
+    {'id': '137001', 'name': 'Cape Verde', 'code': 'CPV', 'group': 'H', 'ranking': 46, 'confederation': 'CAF', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Bubista'},
     {'id': '134527', 'name': 'Saudi Arabia', 'code': 'KSA', 'group': 'H', 'ranking': 32, 'confederation': 'AFC', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Roberto Mancini'},
 
     // Group I
     {'id': '133913', 'name': 'France', 'code': 'FRA', 'group': 'I', 'ranking': 2, 'confederation': 'UEFA', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/p3n0z51726166851.png', 'coach': 'Didier Deschamps'},
-    {'id': '136516', 'name': 'Norway', 'code': 'NOR', 'group': 'I', 'ranking': 24, 'confederation': 'UEFA', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/gyfn811591973155.png', 'coach': 'Ståle Solbakken'},
+    {'id': '137004', 'name': 'Norway', 'code': 'NOR', 'group': 'I', 'ranking': 24, 'confederation': 'UEFA', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/gyfn811591973155.png', 'coach': 'Ståle Solbakken'},
     {'id': '136143', 'name': 'Senegal', 'code': 'SEN', 'group': 'I', 'ranking': 18, 'confederation': 'CAF', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/slayb01780546342.png', 'coach': 'Aliou Cissé'},
     {'id': '134520', 'name': 'Iraq', 'code': 'IRQ', 'group': 'I', 'ranking': 40, 'confederation': 'AFC', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Jesús Casas'},
 
@@ -65,12 +65,12 @@ class WorldCupLocalData {
     {'id': '134509', 'name': 'Argentina', 'code': 'ARG', 'group': 'J', 'ranking': 1, 'confederation': 'CONMEBOL', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/3zplhu1726167477.png', 'coach': 'Lionel Scaloni'},
     {'id': '135986', 'name': 'Austria', 'code': 'AUT', 'group': 'J', 'ranking': 19, 'confederation': 'UEFA', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/874p631628721400.png', 'coach': 'Ralf Rangnick'},
     {'id': '134516', 'name': 'Algeria', 'code': 'ALG', 'group': 'J', 'ranking': 33, 'confederation': 'CAF', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/rrwpry1455218381.png', 'coach': 'Vladimir Petković'},
-    {'id': '136477', 'name': 'Jordan', 'code': 'JOR', 'group': 'J', 'ranking': 43, 'confederation': 'AFC', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Jamal Sellawi'},
+    {'id': '137002', 'name': 'Jordan', 'code': 'JOR', 'group': 'J', 'ranking': 43, 'confederation': 'AFC', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Jamal Sellawi'},
 
     // Group K
     {'id': '133908', 'name': 'Portugal', 'code': 'POR', 'group': 'K', 'ranking': 6, 'confederation': 'UEFA', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/swqvpy1455466083.png', 'coach': 'Roberto Martínez'},
     {'id': '134501', 'name': 'Colombia', 'code': 'COL', 'group': 'K', 'ranking': 10, 'confederation': 'CONMEBOL', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/4ymyku1691180081.png', 'coach': 'Néstor Lorenzo'},
-    {'id': '136477', 'name': 'DR Congo', 'code': 'COD', 'group': 'K', 'ranking': 42, 'confederation': 'CAF', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Sébastien Desabre'},
+    {'id': '137003', 'name': 'DR Congo', 'code': 'COD', 'group': 'K', 'ranking': 42, 'confederation': 'CAF', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Sébastien Desabre'},
     {'id': '134537', 'name': 'Uzbekistan', 'code': 'UZB', 'group': 'K', 'ranking': 49, 'confederation': 'AFC', 'flag': 'https://r2.thesportsdb.com/images/media/team/badge/default.png', 'coach': 'Srečko Katanec'},
 
     // Group L
@@ -133,7 +133,7 @@ class WorldCupLocalData {
     'D': {
       '134514': {'p': 2, 'w': 2, 'd': 0, 'l': 0, 'gf': 6, 'ga': 1, 'pts': 6},
       '134500': {'p': 2, 'w': 1, 'd': 0, 'l': 1, 'gf': 2, 'ga': 2, 'pts': 3},
-      '136471': {'p': 2, 'w': 1, 'd': 0, 'l': 1, 'gf': 2, 'ga': 4, 'pts': 3},
+      '137005': {'p': 2, 'w': 1, 'd': 0, 'l': 1, 'gf': 2, 'ga': 4, 'pts': 3},
       '135982': {'p': 2, 'w': 0, 'd': 0, 'l': 2, 'gf': 0, 'ga': 3, 'pts': 0},
     },
     'E': {
@@ -158,11 +158,11 @@ class WorldCupLocalData {
       '133909': {'p': 2, 'w': 2, 'd': 0, 'l': 0, 'gf': 7, 'ga': 0, 'pts': 6},
       '134504': {'p': 2, 'w': 0, 'd': 2, 'l': 0, 'gf': 3, 'ga': 3, 'pts': 2},
       '134527': {'p': 2, 'w': 0, 'd': 1, 'l': 1, 'gf': 1, 'ga': 5, 'pts': 1},
-      '136477': {'p': 2, 'w': 0, 'd': 1, 'l': 1, 'gf': 0, 'ga': 6, 'pts': 1},
+      '137001': {'p': 2, 'w': 0, 'd': 1, 'l': 1, 'gf': 0, 'ga': 6, 'pts': 1},
     },
     'I': {
       '133913': {'p': 2, 'w': 2, 'd': 0, 'l': 0, 'gf': 6, 'ga': 1, 'pts': 6},
-      '136516': {'p': 2, 'w': 2, 'd': 0, 'l': 0, 'gf': 7, 'ga': 3, 'pts': 6},
+      '137004': {'p': 2, 'w': 2, 'd': 0, 'l': 0, 'gf': 7, 'ga': 3, 'pts': 6},
       '136143': {'p': 2, 'w': 0, 'd': 0, 'l': 2, 'gf': 3, 'ga': 6, 'pts': 0},
       '134520': {'p': 2, 'w': 0, 'd': 0, 'l': 2, 'gf': 1, 'ga': 7, 'pts': 0},
     },
@@ -170,12 +170,12 @@ class WorldCupLocalData {
       '134509': {'p': 2, 'w': 2, 'd': 0, 'l': 0, 'gf': 5, 'ga': 0, 'pts': 6},
       '135986': {'p': 2, 'w': 1, 'd': 0, 'l': 1, 'gf': 3, 'ga': 3, 'pts': 3},
       '134516': {'p': 2, 'w': 1, 'd': 0, 'l': 1, 'gf': 2, 'ga': 4, 'pts': 3},
-      '136477': {'p': 2, 'w': 0, 'd': 0, 'l': 2, 'gf': 2, 'ga': 5, 'pts': 0},
+      '137002': {'p': 2, 'w': 0, 'd': 0, 'l': 2, 'gf': 2, 'ga': 5, 'pts': 0},
     },
     'K': {
       '133908': {'p': 2, 'w': 1, 'd': 1, 'l': 0, 'gf': 6, 'ga': 1, 'pts': 4},
       '134501': {'p': 2, 'w': 1, 'd': 0, 'l': 0, 'gf': 3, 'ga': 1, 'pts': 3},
-      '136477': {'p': 2, 'w': 0, 'd': 1, 'l': 1, 'gf': 1, 'ga': 1, 'pts': 1},
+      '137003': {'p': 2, 'w': 0, 'd': 1, 'l': 1, 'gf': 1, 'ga': 1, 'pts': 1},
       '134537': {'p': 2, 'w': 0, 'd': 0, 'l': 2, 'gf': 1, 'ga': 8, 'pts': 0},
     },
     'L': {
