@@ -226,7 +226,7 @@ class SettingsScreen extends ConsumerWidget {
               style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              'v1.0.0',
+              'v${AppConstants.appVersion}+${AppConstants.appBuildNumber}',
               style: TextStyle(color: subtitleColor),
             ),
           ),
