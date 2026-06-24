@@ -45,16 +45,22 @@ class TheSportsDBService {
     }
     for (final m in apiMatches) {
       if (m.id.isNotEmpty) {
-        final existing = merged[m.id];
-        if (existing != null) {
-          merged[m.id] = _mergeMatch(existing, m);
-        } else {
-          merged[m.id] = m;
+        String? matchKey;
+        for (final entry in merged.entries) {
+          final local = entry.value;
+          if ((local.homeTeamId == m.homeTeamId && local.awayTeamId == m.awayTeamId) ||
+              (local.homeTeamId == m.awayTeamId && local.awayTeamId == m.homeTeamId)) {
+            matchKey = entry.key;
+            break;
+          }
+        }
+        if (matchKey != null) {
+          merged[matchKey] = _mergeMatch(merged[matchKey]!, m);
         }
       }
     }
 
-    final result = merged.values.toList()..sort((a, b) => a.date.compareTo(b.date));
+    final result = merged.values.toList()..sort((a, b) => b.date.compareTo(a.date));
     print('WC2026: Total matches after merge: ${result.length}');
     return result;
   }
@@ -76,141 +82,13 @@ class TheSportsDBService {
 
   Future<List<TeamModel>> getTeamsFromStandings() async {
     final localTeams = WorldCupLocalData.getTeams();
-    print('WC2026: Local teams loaded: ${localTeams.length}');
-    final Map<String, TeamModel> teamsMap = {};
-    for (final t in localTeams) {
-      teamsMap[t.id] = t;
-    }
-
-    try {
-      final response = await _dio.get(
-        '/lookuptable.php',
-        queryParameters: {
-          'l': ApiConfig.worldCupLeagueId,
-          's': ApiConfig.worldCupSeason,
-        },
-      );
-      final data = response.data;
-      if (data != null && data['table'] != null) {
-        final table = data['table'] as List;
-        for (final row in table) {
-          final teamId = row['idTeam']?.toString() ?? '';
-          if (teamId.isEmpty) continue;
-          final existing = teamsMap[teamId];
-          final groupLetter = _extractGroupLetter(row['strGroup']?.toString());
-          teamsMap[teamId] = TeamModel(
-            id: teamId,
-            name: row['strTeam']?.toString() ?? existing?.name ?? '',
-            code: existing?.code,
-            flag: _cleanBadgeUrl(row['strBadge']?.toString()) ?? existing?.flag,
-            group: groupLetter ?? existing?.group,
-            fifaRanking: existing?.fifaRanking,
-            confederation: existing?.confederation,
-            coach: existing?.coach,
-            wins: _parseInt(row['intWin']) > 0 ? _parseInt(row['intWin']) : existing?.wins ?? 0,
-            draws: _parseInt(row['intDraw']) > 0 ? _parseInt(row['intDraw']) : existing?.draws ?? 0,
-            losses: _parseInt(row['intLoss']) > 0 ? _parseInt(row['intLoss']) : existing?.losses ?? 0,
-            goalsFor: _parseInt(row['intGoalsFor']) > 0 ? _parseInt(row['intGoalsFor']) : existing?.goalsFor ?? 0,
-            goalsAgainst: _parseInt(row['intGoalsAgainst']) > 0 ? _parseInt(row['intGoalsAgainst']) : existing?.goalsAgainst ?? 0,
-            points: _parseInt(row['intPoints']) > 0 ? _parseInt(row['intPoints']) : existing?.points ?? 0,
-          );
-        }
-      }
-    } catch (_) {}
-
-    return teamsMap.values.toList()..sort((a, b) => (a.fifaRanking ?? 999).compareTo(b.fifaRanking ?? 999));
+    print('WC2026: Local teams loaded: ${localTeams.length} (using local as source of truth)');
+    return localTeams;
   }
 
   Future<List<GroupModel>> getGroups() async {
     final localGroups = WorldCupLocalData.getGroups();
-    print('WC2026: Local groups loaded: ${localGroups.length}');
-
-    try {
-      final response = await _dio.get(
-        '/lookuptable.php',
-        queryParameters: {
-          'l': ApiConfig.worldCupLeagueId,
-          's': ApiConfig.worldCupSeason,
-        },
-      );
-      final data = response.data;
-      if (data != null && data['table'] != null) {
-        final table = data['table'] as List;
-        final Map<String, List<StandingModel>> apiGroups = {};
-
-        for (final row in table) {
-          final groupLabel = row['strGroup']?.toString() ?? '';
-          final groupLetter = _extractGroupLetter(groupLabel) ?? groupLabel;
-          if (groupLetter.isEmpty) continue;
-
-          final standing = StandingModel(
-            teamId: row['idTeam']?.toString() ?? '',
-            team: TeamModel(
-              id: row['idTeam']?.toString() ?? '',
-              name: row['strTeam']?.toString() ?? '',
-              flag: _cleanBadgeUrl(row['strBadge']?.toString()),
-            ),
-            played: _parseInt(row['intPlayed']),
-            won: _parseInt(row['intWin']),
-            drawn: _parseInt(row['intDraw']),
-            lost: _parseInt(row['intLoss']),
-            goalsFor: _parseInt(row['intGoalsFor']),
-            goalsAgainst: _parseInt(row['intGoalsAgainst']),
-            goalDifference: _parseInt(row['intGoalDifference']),
-            points: _parseInt(row['intPoints']),
-            position: _parseInt(row['intRank']),
-          );
-
-          apiGroups.putIfAbsent(groupLetter, () => []);
-          apiGroups[groupLetter]!.add(standing);
-        }
-
-        for (final apiGroup in apiGroups.entries) {
-          final localIndex = localGroups.indexWhere((g) => g.name == apiGroup.key);
-          if (localIndex >= 0) {
-            final localGroup = localGroups[localIndex];
-            final mergedStandings = <StandingModel>[];
-            final apiTeamIds = apiGroup.value.map((s) => s.teamId).toSet();
-
-            for (final apiStanding in apiGroup.value) {
-              mergedStandings.add(apiStanding);
-            }
-            for (final localStanding in localGroup.teams) {
-              if (!apiTeamIds.contains(localStanding.teamId)) {
-                mergedStandings.add(localStanding);
-              }
-            }
-
-            mergedStandings.sort((a, b) {
-              final cmp = b.points.compareTo(a.points);
-              if (cmp != 0) return cmp;
-              return b.goalDifference.compareTo(a.goalDifference);
-            });
-
-            localGroups[localIndex] = GroupModel(
-              id: apiGroup.key,
-              name: apiGroup.key,
-              teams: mergedStandings,
-            );
-          } else {
-            final standings = List<StandingModel>.from(apiGroup.value)
-              ..sort((a, b) {
-                final cmp = b.points.compareTo(a.points);
-                if (cmp != 0) return cmp;
-                return b.goalDifference.compareTo(a.goalDifference);
-              });
-            localGroups.add(GroupModel(
-              id: apiGroup.key,
-              name: apiGroup.key,
-              teams: standings,
-            ));
-          }
-        }
-      }
-    } catch (_) {}
-
-    localGroups.sort((a, b) => a.name.compareTo(b.name));
-    print('WC2026: Final groups: ${localGroups.length}');
+    print('WC2026: Local groups loaded: ${localGroups.length} (using local as source of truth)');
     for (final g in localGroups) {
       print('WC2026:   Group ${g.name}: ${g.teams.length} teams');
     }

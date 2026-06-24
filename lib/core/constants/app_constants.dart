@@ -14,7 +14,7 @@ class AppConstants {
   static const String appName = 'World Cup 2026';
   static const String appTagline = 'Premium Football Experience';
   static const String appVersion = '1.0.3';
-  static const String appBuildNumber = '8';
+  static const String appBuildNumber = '9';
 
   static const String packageName = 'com.worldcup.premium';
   static const String bundleId = 'com.worldcup.premium';
