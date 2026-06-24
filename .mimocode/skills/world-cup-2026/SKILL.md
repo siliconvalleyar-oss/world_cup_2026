@@ -7,14 +7,40 @@ description: Use when working on the World Cup 2026 Flutter app — fixing bugs,
 
 ## Project Overview
 
-Flutter app (v1.0.3+4) for FIFA World Cup 2026. Uses Riverpod + GoRouter + Dio + Hive + Freezed. Architecture: clean architecture with data/domain/presentation layers.
+Flutter app for FIFA World Cup 2026. Uses Riverpod + GoRouter + Dio + Hive + Freezed. Architecture: clean architecture with data/domain/presentation layers.
 
-- **SDK**: Dart ^3.12.0
-- **State Management**: flutter_riverpod ^2.6.1
-- **Routing**: go_router ^14.8.1
-- **HTTP**: dio ^5.7.0
-- **Local Storage**: hive ^2.2.3
+- **SDK**: Dart ^3.12.0, Flutter 3.44.1 stable
+- **State Management**: flutter_riverpod
+- **Routing**: go_router
+- **HTTP**: dio
+- **Local Storage**: hive + hive_flutter
 - **Code Gen**: freezed + json_serializable
+
+## Build & Deploy Rules (CRITICAL)
+
+### Mandatory in every build
+
+1. **Increment version** in `pubspec.yaml` (+1 to build number): `1.0.3+4` → `1.0.3+5`
+2. **Sync** `lib/core/constants/app_constants.dart` with pubspec
+3. **Create git tag**: `git tag v1.0.3+5`
+4. **Copy APK** to `APK/world_cup_2026_v1.0.3+5.apk`
+5. **Install with retry**: If `adb install -r` fails, retry **5 times with 1 min wait**:
+   ```bash
+   for i in 1 2 3 4 5; do
+     adb install -r build/app/outputs/flutter-apk/app-release.apk && break
+     sleep 60
+   done
+   ```
+6. **NEVER uninstall first** — use `-r` flag to replace. Uninstall loses Hive data.
+
+### Pre-build checklist
+
+- [ ] `pubspec.yaml` version incremented
+- [ ] `app_constants.dart` synced
+- [ ] `dart run build_runner build --delete-conflicting-outputs` run
+- [ ] `flutter analyze` — 0 errors
+- [ ] APK built, copied, installed with retry
+- [ ] Git commit + tag + push
 
 ## Directory Structure
 
@@ -25,61 +51,39 @@ lib/
 ├── core/
 │   ├── config/api_config.dart         # TheSportsDB base URL + league ID 4429
 │   ├── constants/
-│   │   ├── api_endpoints.dart         # UNUSED fake API (api.worldcup2026.app)
-│   │   ├── app_constants.dart         # Colors, tournament info, asset paths
+│   │   ├── app_constants.dart         # Colors, version, tournament info
 │   │   └── hive_constants.dart
 │   ├── network/
 │   │   ├── dio_client.dart            # Singleton Dio with interceptors
-│   │   ├── api_response.dart
 │   │   └── interceptors/              # auth, cache, logging, retry
-│   ├── services/                      # connectivity, hive, notification
 │   ├── localization/app_localizations.dart  # EN/ES via L10n
-│   ├── errors/                        # Failure + AppException
-│   ├── extensions/                    # context, string
-│   ├── design_system/                 # colors, typography, spacing, glass, shadows, animations
+│   ├── design_system/                 # colors, typography, glass, shadows
 │   ├── theme/app_theme.dart
 │   └── widgets/
 ├── data/
 │   ├── datasources/
 │   │   ├── local/
-│   │   │   ├── world_cup_local_data.dart    # 48 teams hardcoded + standings + venues
-│   │   │   ├── world_cup_fixtures.dart      # 72 group stage matches hardcoded
-│   │   │   ├── world_cup_players_data.dart  # 75 players hardcoded (15 teams)
-│   │   │   ├── world_cup_scorers.dart       # 15 top scorers hardcoded
-│   │   │   ├── team_local_datasource.dart
-│   │   │   ├── match_local_datasource.dart
-│   │   │   ├── standing_local_datasource.dart
-│   │   │   └── news_local_datasource.dart
+│   │   │   ├── world_cup_local_data.dart    # 48 teams + standings + venues
+│   │   │   └── world_cup_fixtures.dart      # 72 group + 16 knockout matches
 │   │   └── remote/
-│   │       ├── thesportsdb_service.dart     # MAIN API SERVICE (TheSportsDB)
-│   │       ├── team_remote_datasource.dart
-│   │       ├── match_remote_datasource.dart
-│   │       ├── standing_remote_datasource.dart
-│   │       ├── player_remote_datasource.dart
-│   │       └── news_remote_datasource.dart
-│   ├── models/                        # freezed models: Team, Match, Group, Standing, Venue, News, Player, Event, etc.
-│   └── repositories/                  # Impl classes with Either<Failure, T> pattern
+│   │       └── thesportsdb_service.dart     # MAIN API (TheSportsDB)
+│   ├── models/                        # freezed models
+│   └── repositories/
 ├── domain/
-│   ├── entities/                      # TeamEntity, MatchEntity, PlayerEntity
-│   ├── repositories/                  # Abstract interfaces
-│   └── usecases/
-├── features/                          # Empty dirs (features not implemented as separate modules)
-│   ├── favorites/, fixture/, home/, knockout/, matches/, news/,
-│   │   notifications/, players/, settings/, stadiums/, standings/, teams/
+│   ├── entities/
+│   └── repositories/
 └── presentation/
     ├── providers/                     # Riverpod providers
-    │   ├── api_provider.dart          # theSportsDBServiceProvider
+    │   ├── api_provider.dart
     │   ├── match_provider.dart        # matchListProvider, knockoutMatchesProvider
-    │   ├── team_provider.dart         # teamListProvider
-    │   ├── standing_provider.dart     # groupListProvider, standingsProvider
-    │   ├── player_provider.dart       # playerListProvider (LOCAL ONLY)
-    │   ├── news_provider.dart         # newsListProvider
-    │   ├── stadium_provider.dart      # stadiumListProvider
+    │   ├── team_provider.dart
+    │   ├── standing_provider.dart
+    │   ├── player_provider.dart
+    │   ├── news_provider.dart
+    │   ├── stadium_provider.dart
     │   ├── settings_provider.dart
-    │   ├── favorites_provider.dart
-    │   └── connectivity_provider.dart
-    ├── screens/                       # All UI screens
-    │   ├── splash/splash_screen.dart
+    │   └── favorites_provider.dart
+    ├── screens/
     │   ├── home/home_screen.dart
     │   ├── fixture/fixture_screen.dart
     │   ├── standings/standings_screen.dart
@@ -91,8 +95,8 @@ lib/
     │   ├── news/news_screen.dart + news_detail_screen.dart
     │   ├── favorites/favorites_screen.dart
     │   └── settings/settings_screen.dart
-    ├── router/app_router.dart         # GoRouter (DUPLICATE with app.dart)
-    └── widgets/                       # Reusable widgets
+    ├── router/app_router.dart
+    └── widgets/                       # MatchCard, EmptyState, ShimmerLoading, etc.
 ```
 
 ## API Configuration
@@ -101,20 +105,16 @@ lib/
 - **Base URL**: `https://www.thesportsdb.com/api/v1/json/3`
 - **League ID**: `4429` (FIFA World Cup)
 - **Season**: `2026`
-- **Endpoints used**:
+- **Endpoints**:
   - `/eventsseason.php?id=4429&s=2026` — matches
   - `/lookuptable.php?l=4429&s=2026` — standings
   - `/eventsnextleague.php?id=4429` — next matches
   - `/eventspastleague.php?id=4429` — past events (news)
 
-### UNUSED API: api.worldcup2026.app
-- Defined in `api_endpoints.dart` but NEVER used anywhere
-- Returns HTTP 000 (connection refused) — API does not exist
-
 ## Data Flow
 
 ```
-TheSportsDB API ──→ TheSportsDBService ──→ merges with local data ──→ Providers ──→ Screens
+TheSportsDB API → TheSportsDBService → merges with local data → Providers → Screens
                          │
                          ├── getMatches()        → local fixtures + API events
                          ├── getTeamsFromStandings() → local 48 teams + API table
@@ -123,43 +123,57 @@ TheSportsDB API ──→ TheSportsDBService ──→ merges with local data �
                          └── getVenues()         → local 15 venues + API events
 ```
 
-## Critical Issues Found
+## Runtime Errors — FIXED
 
-See @issues.md for the full bug list. Summary:
+### 1. ref.refresh() in error callbacks (CRITICAL)
+**Problem**: Calling `ref.refresh()` inside `.error` callbacks during widget build causes `_elements.contains(element)` assertion crash.
+**Fix**: Replace `AppErrorWidget(onRetry: () => ref.refresh(provider))` with static `EmptyState` widget.
+**Files fixed**: 12 screens (teams, fixture, standings, players, knockout, match_detail, team_detail, player_detail, stadiums, news, stadium_detail, news_detail)
 
-1. **Duplicate team IDs** — ID `136477` reused for 4 different teams (Cape Verde, Curaçao, Jordan, DR Congo)
-2. **No knockout data** — knockoutMatchesProvider filters `group == null` but all matches have groups → always empty
-3. **Player-team ID mismatches** — Players reference wrong team IDs (France `133909` vs actual `133913`, etc.)
-4. **Italy not in tournament** — Players exist for Italy but Italy didn't qualify; Belgium is the team
-5. **Duplicate router definitions** — GoRouter defined in both `app.dart` and `app_router.dart`
-6. **API silent failures** — All catch blocks swallow errors with empty lists
+### 2. SliverList with error widgets
+**Problem**: Non-sliver widgets inside `SliverList` cause `RenderViewport expected RenderSliver` cascade.
+**Fix**: Use `SliverToBoxAdapter` instead of `SliverList(delegate: SliverChildListDelegate(...))`.
 
-See @groups.md for the group organization analysis against the real FIFA draw.
+### 3. BorderRadius.symmetric removed in Flutter 3.44
+**Fix**: Use `BorderRadius.all(Radius.circular(...))` instead.
+
+### 4. ConnectivityResult API changed
+**Fix**: `connectivity_plus` now returns `List<ConnectivityResult>`. Use `.any((r) => r != ConnectivityResult.none)`.
+
+### 5. Import path api_config.dart
+**Fix**: File is at `core/config/api_config.dart`, not `core/network/`.
+
+### 6. Hive requires hive_flutter
+**Fix**: Import `hive_flutter` for `initFlutter()`, not just `hive`.
+
+## Known Issues — NOT YET FIXED
+
+### CRITICAL: Duplicate Team IDs
+ID `136477` reused for Cape Verde, Curaçao, Jordan, DR Congo. Only last survives in maps.
+
+### CRITICAL: Player-Team ID Mismatches
+Players reference wrong team IDs (France `133909` vs actual `133913`, etc.)
+
+### HIGH: Italy Players Without Italy Team
+5 Italy players exist but Italy didn't qualify. ID `134511` is actually Iran.
+
+### MEDIUM: No Standings Tiebreaker
+Sort by points + GD only. Missing: goals scored, head-to-head, fair play.
 
 ## Key Files to Modify
 
 | Task | Files |
 |------|-------|
 | Fix knockout stage | `match_provider.dart`, `knockout_screen.dart`, `world_cup_fixtures.dart` |
-| Fix team data | `world_cup_local_data.dart`, `world_cup_players_data.dart` |
+| Fix team data | `world_cup_local_data.dart` |
 | Fix API issues | `thesportsdb_service.dart`, `api_config.dart` |
-| Add new screens | `presentation/screens/`, `app_router.dart`, `app.dart` |
+| Add new screens | `presentation/screens/`, `app_router.dart` |
 | Modify providers | `presentation/providers/` |
-| Change data models | `data/models/` (freezed — run build_runner after) |
+| Change models | `data/models/` (freezed — run build_runner after) |
 
-## Build Commands
+## Git & Device
 
-```bash
-# Generate freezed code
-dart run build_runner build --delete-conflicting-outputs
-
-# Run app
-flutter run
-
-# Build APK
-flutter build apk --release
-```
-
-## Localization
-
-English (EN) and Spanish (ES) via `L10n` class in `core/localization/app_localizations.dart`. Language toggled via settings provider.
+- **Remote**: `https://github.com/siliconvalleyar-oss/world_cup_2026.git`
+- **ADB Device**: Check with `adb devices` before install
+- **Package**: `com.worldcup2026.world_cup_2026`
+- **Language**: Always respond in Spanish
