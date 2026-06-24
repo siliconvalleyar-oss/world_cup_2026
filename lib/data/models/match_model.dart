@@ -22,6 +22,7 @@ class MatchModel with _$MatchModel {
     @Default('scheduled') String status,
     int? matchday,
     String? group,
+    @Default('group_stage') String stage,
     VenueModel? venue,
     String? referee,
     required DateTime date,

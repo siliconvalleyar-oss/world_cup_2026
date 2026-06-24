@@ -8,97 +8,73 @@ PROYECTO ACTUAL: /home/optimus/Documentos/mimo/world_cup_2026
 ----------------------------------------
 
 [TAREA 1] VERIFICAR APP EN DISPOSITIVO
-  Estado: COMPLETADO (parcial)
-  Descripcion: Se corrigieron los 3 errores de runtime en home_screen
-  - SliverList→SliverToBoxAdapter
-  - ref.refresh removido de callbacks de error
-  - EmptyState estatico para errores
-  Accion: Falta probar en dispositivo real
+  Estado: COMPLETADO
+  Descripcion: APK construido e instalado en dispositivo 192.168.1.35:46125
 
 [TAREA 2] CORREGIR TODAS LAS PANTALLAS CON ref.refresh EN ERROR CALLBACKS
   Estado: COMPLETADO
-  Descripcion: Se corrigieron 13 archivos que usaban ref.refresh() en callbacks
-  de error durante el build, causando crashes
-  Archivos corregidos (13):
-  - lib/presentation/screens/teams/teams_screen.dart
-  - lib/presentation/screens/fixture/fixture_screen.dart (2 fixes)
-  - lib/presentation/screens/standings/standings_screen.dart
-  - lib/presentation/screens/players/players_screen.dart
-  - lib/presentation/screens/knockout/knockout_screen.dart
-  - lib/presentation/screens/teams/team_detail_screen.dart
-  - lib/presentation/screens/players/player_detail_screen.dart
-  - lib/presentation/screens/matches/match_detail_screen.dart
-  - lib/presentation/screens/stadiums/stadiums_screen.dart
-  - lib/presentation/screens/news/news_screen.dart
-  - lib/presentation/screens/stadiums/stadium_detail_screen.dart
-  - lib/presentation/screens/news/news_detail_screen.dart
-  Cambio: AppErrorWidget con ref.refresh → EmptyState estatico
-  Resultado: flutter analyze = 0 errores
+  Descripcion: 13 archivos corregidos, flutter analyze = 0 errores
 
 [TAREA 3] COMMIT DE CAMBIOS PENDIENTES
   Estado: PENDIENTE
-  Descripcion: Hay cambios sin commitear despues de los fixes de todas las pantallas
-  Accion: git add + git commit con descripcion de los fixes
-  Archivos modificados: 13 archivos .dart
+  Descripcion: 13 archivos .dart sin commitear
+  Accion: git add + git commit
 
-[TAREA 4] BUILD Y DEPLOY EN DISPOSITIVO
+[TAREA 4] FIX: PARTIDOS NO JUGADOS MOSTRANDO "0 - 0"
   Estado: PENDIENTE
-  Descripcion: Compilar APK e instalar en dispositivo para verificar
-  Comandos:
-  - flutter build apk --debug
-  - adb install -r -d build/app/outputs/flutter-apk/app-debug.apk
-  - adb connect 192.168.1.35:35667
+  Descripcion: Los partidos scheduled muestran 0-0 en vez de vacio
+  Causa: MatchModel.homeScore/awayScore default a 0, MatchCard siempre muestra score
+  Archivos: match_card.dart, match_model.dart
+  Solucion: No mostrar scores cuando status == 'scheduled'
 
-=======================================
-PROYECTO ANTERIOR: fixture/world_cup_2026
-(Solo si se desea continuar este proyecto)
-----------------------------------------
-
-[TAREA 5] COMPLETAR ARCHIVOS FALTANTES (70% completado)
+[TAREA 5] FIX: ORDENAMIENTO DE PARTIDOS
   Estado: PENDIENTE
-  Descripcion: Faltan archivos por generar para completar la app premium
-  Archivos faltantes:
-  - lib/main.dart
-  - lib/presentation/widgets/shimmer_widgets.dart
-  - lib/presentation/screens/player_detail_screen.dart
-  - lib/presentation/screens/stadiums_screen.dart
-  - lib/presentation/screens/news_screen.dart
-  - lib/presentation/screens/favorites_screen.dart
-  - lib/presentation/screens/settings_screen.dart
+  Descripcion: Mostrar ultimos partidos primero (fecha/hora mas reciente arriba)
+  Archivo: fixture_screen.dart
+  Solucion: Ordenar por date descendente por defecto
 
-[TAREA 6] BUILD Y ANALISIS
+[TAREA 6] FIX: GRUPO G CON EQUIPOS INCORRECTOS
   Estado: PENDIENTE
-  Descripcion: Compilar y verificar errores en fixture project
-  Comandos:
-  - flutter pub get
-  - dart run build_runner build --delete-conflicting-outputs
-  - flutter analyze
+  Descripcion: Grupo G tiene equipos que no pertenecen
+  Archivos: world_cup_fixtures.dart, thesportsdb_service.dart
+  Accion: Investigar origen de datos y corregir asignacion
 
-=======================================
+[TAREA 7] FIX: PARTIDOS JUGADO/EN VIVO MOSTRANDO "0 - 0"
+  Estado: PENDIENTE
+  Descripcion: Partidos finished/live muestran 0-0 porque la API no retorna scores
+  Archivo: thesportsdb_service.dart
+  Accion: Verificar si la API retorna scores o si hay que buscar en otra fuente
+
+[TAREA 8] AGREGAR FIXTURE OCTAVOS (ROUND OF 32)
+  Estado: PENDIENTE
+  Descripcion: Generar fixture de octavos con equipos clasificados
+  Requisitos: Fecha, hora, sede, rivales segun clasificacion (1ro vs 2do)
+  Archivos: world_cup_fixtures.dart, knockout_screen.dart
+
+========================================
 ERRORES CONOCIDOS Y SOLUCIONES
 ========================================
 
 1. ref.refresh() en .error callbacks durante build
-   Solucion: Usar EmptyState estatico (ya aplicado en 13 archivos)
+   Solucion: EmptyState estatico (COMPLETADO en 13 archivos)
 
 2. SliverList con widgets de error (RenderErrorBox)
-   Solucion: Cambiar a SliverToBoxAdapter + Column
+   Solucion: SliverToBoxAdapter + Column
 
-3. BorderRadius.symmetric eliminado en Flutter 3.44
-   Solucion: Usar BorderRadius.all(Radius.circular(...))
+3. "0-0" en partidos no jugados
+   Causa: MatchModel scores default a 0, MatchCard siempre muestra score
+   Solucion: Condicional en match_card.dart basado en match.status
 
-4. ConnectivityResult ahora retorna List<ConnectivityResult>
-   Solucion: usar .any((r) => r != ConnectivityResult.none)
+4. Grupo G con equipos extra
+   Causa: pendiente de investigar
+   Solucion: pendiente
 
-5. Import path api_config.dart incorrecto
-   Solucion: core/config/api_config.dart (no core/network/)
+5. Falta fixture octavos
+   Solucion: Generar datos con equipos clasificados + schedule
 
-6. hive requiere hive_flutter para initFlutter()
-   Solucion: importar hive_flutter en vez de solo hive
-
-========================================
+=======================================
 ESTADO DEL REPOSITORIO
-========================================
+=======================================
 
 Branch: master
 Commits: 4
@@ -110,7 +86,7 @@ Commits: 4
 Cambios sin commit: 13 archivos .dart (correccion de ref.refresh en error callbacks)
 Flutter analyze: 0 errores, 63 warnings/info (cosmeticos)
 
-Dispositivo ADB: 192.168.1.35:35667 (verificar conexion)
+Dispositivo ADB: 192.168.1.35:46125
 Package: com.worldcup2026.world_cup_2026
 APK: build/app/outputs/flutter-apk/app-debug.apk
 

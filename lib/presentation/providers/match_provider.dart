@@ -57,7 +57,7 @@ final filteredMatchProvider = Provider<AsyncValue<List<MatchModel>>>((ref) {
 final knockoutMatchesProvider = Provider<AsyncValue<List<MatchModel>>>((ref) {
   final matchesAsync = ref.watch(matchListProvider);
   return matchesAsync.whenData(
-    (matches) => matches.where((m) => m.group == null).toList(),
+    (matches) => matches.where((m) => m.stage != 'group_stage').toList(),
   );
 });
 
