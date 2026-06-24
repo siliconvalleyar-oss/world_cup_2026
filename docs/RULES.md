@@ -19,7 +19,30 @@
    git tag v1.0.3+5
    ```
 
-4. **El `android/app/build.gradle.kts`** ya usa `flutter.versionCode` y `flutter.versionName` de pubspec — NO modificar.
+4. **Copiar APK compilado a `APK/`** con el nombre de la versión:
+   ```bash
+   cp build/app/outputs/flutter-apk/app-release.apk APK/world_cup_2026_v1.0.3+5.apk
+   ```
+   Cada build queda archivado en `APK/` con su versión. No borrar APKs anteriores.
+
+5. **Instalar en el móvil REEMPLAZANDO la app actual** — NUNCA desinstalar primero:
+    ```bash
+    adb install -r build/app/outputs/flutter-apk/app-release.apk
+    ```
+    El flag `-r` (replace) reemplaza la app existente sin pedir permiso ni autorización adicional. Si se desinstala primero, Android pide confirmación y se pierden los datos de Hive (settings, favorites, cache).
+
+6. **Reintentos de instalación**: Si `adb install -r` falla, reintentar **5 veces con 1 minuto de espera** entre cada intento. Script:
+    ```bash
+    for i in 1 2 3 4 5; do
+      echo "Intento $i de 5..."
+      adb install -r build/app/outputs/flutter-apk/app-release.apk && break
+      echo "Falló. Esperando 60 segundos..."
+      sleep 60
+    done
+    ```
+    Si los 5 intentos fallan, reportar el error al usuario y NO continuar con el build/release.
+
+7. **El `android/app/build.gradle.kts`** ya usa `flutter.versionCode` y `flutter.versionName` de pubspec — NO modificar.
 
 ### Fuentes de verdad (orden de precedencia)
 
@@ -80,4 +103,7 @@ Todas deben coincidir SIEMPRE.
 - [ ] `dart run build_runner build --delete-conflicting-outputs` ejecutado
 - [ ] `flutter analyze` sin errores
 - [ ] APK compilado: `flutter build apk --release`
-- [ ] Git tag creado: `git tag v{version}`
+- [ ] APK copiado a `APK/world_cup_2026_v{version}.apk`
+- [ ] APK instalado en móvil: `adb install -r` (reemplazar, NUNCA desinstalar) — si falla, reintentar 5 veces con 1 min de espera
+- [ ] Git commit + tag creado: `git tag v{version}`
+- [ ] Push: `git push origin main && git push origin v{version}`
