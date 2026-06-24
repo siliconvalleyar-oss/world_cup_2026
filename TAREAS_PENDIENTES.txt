@@ -1,0 +1,119 @@
+========================================
+  TAREAS PENDIENTES - World Cup 2026
+  Generado: 2026-06-23
+  Actualizado: 2026-06-23
+========================================
+
+PROYECTO ACTUAL: /home/optimus/Documentos/mimo/world_cup_2026
+----------------------------------------
+
+[TAREA 1] VERIFICAR APP EN DISPOSITIVO
+  Estado: COMPLETADO (parcial)
+  Descripcion: Se corrigieron los 3 errores de runtime en home_screen
+  - SliverList→SliverToBoxAdapter
+  - ref.refresh removido de callbacks de error
+  - EmptyState estatico para errores
+  Accion: Falta probar en dispositivo real
+
+[TAREA 2] CORREGIR TODAS LAS PANTALLAS CON ref.refresh EN ERROR CALLBACKS
+  Estado: COMPLETADO
+  Descripcion: Se corrigieron 13 archivos que usaban ref.refresh() en callbacks
+  de error durante el build, causando crashes
+  Archivos corregidos (13):
+  - lib/presentation/screens/teams/teams_screen.dart
+  - lib/presentation/screens/fixture/fixture_screen.dart (2 fixes)
+  - lib/presentation/screens/standings/standings_screen.dart
+  - lib/presentation/screens/players/players_screen.dart
+  - lib/presentation/screens/knockout/knockout_screen.dart
+  - lib/presentation/screens/teams/team_detail_screen.dart
+  - lib/presentation/screens/players/player_detail_screen.dart
+  - lib/presentation/screens/matches/match_detail_screen.dart
+  - lib/presentation/screens/stadiums/stadiums_screen.dart
+  - lib/presentation/screens/news/news_screen.dart
+  - lib/presentation/screens/stadiums/stadium_detail_screen.dart
+  - lib/presentation/screens/news/news_detail_screen.dart
+  Cambio: AppErrorWidget con ref.refresh → EmptyState estatico
+  Resultado: flutter analyze = 0 errores
+
+[TAREA 3] COMMIT DE CAMBIOS PENDIENTES
+  Estado: PENDIENTE
+  Descripcion: Hay cambios sin commitear despues de los fixes de todas las pantallas
+  Accion: git add + git commit con descripcion de los fixes
+  Archivos modificados: 13 archivos .dart
+
+[TAREA 4] BUILD Y DEPLOY EN DISPOSITIVO
+  Estado: PENDIENTE
+  Descripcion: Compilar APK e instalar en dispositivo para verificar
+  Comandos:
+  - flutter build apk --debug
+  - adb install -r -d build/app/outputs/flutter-apk/app-debug.apk
+  - adb connect 192.168.1.35:35667
+
+=======================================
+PROYECTO ANTERIOR: fixture/world_cup_2026
+(Solo si se desea continuar este proyecto)
+----------------------------------------
+
+[TAREA 5] COMPLETAR ARCHIVOS FALTANTES (70% completado)
+  Estado: PENDIENTE
+  Descripcion: Faltan archivos por generar para completar la app premium
+  Archivos faltantes:
+  - lib/main.dart
+  - lib/presentation/widgets/shimmer_widgets.dart
+  - lib/presentation/screens/player_detail_screen.dart
+  - lib/presentation/screens/stadiums_screen.dart
+  - lib/presentation/screens/news_screen.dart
+  - lib/presentation/screens/favorites_screen.dart
+  - lib/presentation/screens/settings_screen.dart
+
+[TAREA 6] BUILD Y ANALISIS
+  Estado: PENDIENTE
+  Descripcion: Compilar y verificar errores en fixture project
+  Comandos:
+  - flutter pub get
+  - dart run build_runner build --delete-conflicting-outputs
+  - flutter analyze
+
+=======================================
+ERRORES CONOCIDOS Y SOLUCIONES
+========================================
+
+1. ref.refresh() en .error callbacks durante build
+   Solucion: Usar EmptyState estatico (ya aplicado en 13 archivos)
+
+2. SliverList con widgets de error (RenderErrorBox)
+   Solucion: Cambiar a SliverToBoxAdapter + Column
+
+3. BorderRadius.symmetric eliminado en Flutter 3.44
+   Solucion: Usar BorderRadius.all(Radius.circular(...))
+
+4. ConnectivityResult ahora retorna List<ConnectivityResult>
+   Solucion: usar .any((r) => r != ConnectivityResult.none)
+
+5. Import path api_config.dart incorrecto
+   Solucion: core/config/api_config.dart (no core/network/)
+
+6. hive requiere hive_flutter para initFlutter()
+   Solucion: importar hive_flutter en vez de solo hive
+
+========================================
+ESTADO DEL REPOSITORIO
+========================================
+
+Branch: master
+Commits: 4
+- 740240b feat: World Cup 2026 app - connect to TheSportsDB real API
+- 1a33362 feat: replace app icon with custom icon.png
+- 2a17829 fix: .gitignore to track android source files
+- 38f53af fix: home screen crashes - SliverList/RenderViewport error and ref.refresh assertion
+
+Cambios sin commit: 13 archivos .dart (correccion de ref.refresh en error callbacks)
+Flutter analyze: 0 errores, 63 warnings/info (cosmeticos)
+
+Dispositivo ADB: 192.168.1.35:35667 (verificar conexion)
+Package: com.worldcup2026.world_cup_2026
+APK: build/app/outputs/flutter-apk/app-debug.apk
+
+========================================
+FIN DEL DOCUMENTO
+========================================

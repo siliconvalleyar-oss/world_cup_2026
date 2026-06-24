@@ -10,7 +10,6 @@ import 'package:world_cup_2026/presentation/providers/settings_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/team_flag.dart';
 import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
 import 'package:world_cup_2026/presentation/widgets/shimmer_loading.dart';
 
 class TeamsScreen extends ConsumerStatefulWidget {
@@ -76,8 +75,8 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
                 itemCount: 8,
                 itemBuilder: (context, index) => const ShimmerLoading(pattern: ShimmerPattern.card),
               ),
-              error: (error, stack) => Center(
-                child: AppErrorWidget(message: error.toString(), onRetry: () => ref.refresh(teamListProvider))),
+              error: (_, __) => Center(
+                child: EmptyState(icon: Icons.wifi_off, title: l10n.connectionError, subtitle: l10n.pullToRefresh)),
             ),
           ),
         ],

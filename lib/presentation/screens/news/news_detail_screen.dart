@@ -5,7 +5,7 @@ import 'package:world_cup_2026/core/constants/app_constants.dart';
 import 'package:world_cup_2026/data/models/news_model.dart';
 import 'package:world_cup_2026/presentation/providers/news_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
+import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
 import 'package:intl/intl.dart';
 
 class NewsDetailScreen extends ConsumerWidget {
@@ -22,7 +22,7 @@ class NewsDetailScreen extends ConsumerWidget {
       body: articleAsync.when(
         data: (article) {
           if (article == null) {
-            return const Center(child: AppErrorWidget(message: 'Article not found'));
+            return const Center(child: EmptyState(icon: Icons.article, title: 'Article not found', subtitle: ''));
           }
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -43,11 +43,8 @@ class NewsDetailScreen extends ConsumerWidget {
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppConstants.primaryColor),
         ),
-        error: (error, stack) => Center(
-          child: AppErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.refresh(newsDetailProvider(articleId)),
-          ),
+        error: (_, __) => const Center(
+          child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
         ),
       ),
     );

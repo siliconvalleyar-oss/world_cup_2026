@@ -11,7 +11,6 @@ import 'package:world_cup_2026/presentation/providers/standing_provider.dart';
 import 'package:world_cup_2026/presentation/providers/settings_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/match_card.dart';
 import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
 import 'package:world_cup_2026/presentation/widgets/shimmer_loading.dart';
 import 'package:intl/intl.dart';
 
@@ -108,8 +107,8 @@ class _FixtureScreenState extends ConsumerState<FixtureScreen>
                   child: ShimmerLoading(pattern: ShimmerPattern.card),
                 ),
               ),
-              error: (error, stack) => Center(
-                child: AppErrorWidget(message: error.toString(), onRetry: () => ref.refresh(matchListProvider)),
+              error: (_, __) => Center(
+                child: EmptyState(icon: Icons.wifi_off, title: l10n.connectionError, subtitle: l10n.pullToRefresh),
               ),
             ),
           ),
@@ -251,8 +250,8 @@ class _FixtureScreenState extends ConsumerState<FixtureScreen>
         );
       },
       loading: () => const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor)),
-      error: (error, stack) => Center(child: AppErrorWidget(
-        message: error.toString(), onRetry: () => ref.refresh(groupListProvider))),
+      error: (_, __) => Center(child: EmptyState(
+        icon: Icons.wifi_off, title: l10n.connectionError, subtitle: l10n.pullToRefresh)),
     );
   }
 }

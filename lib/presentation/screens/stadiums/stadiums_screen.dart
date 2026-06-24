@@ -7,7 +7,6 @@ import 'package:world_cup_2026/data/models/venue_model.dart';
 import 'package:world_cup_2026/presentation/providers/stadium_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
 import 'package:world_cup_2026/presentation/widgets/shimmer_loading.dart';
 
 class StadiumsScreen extends ConsumerStatefulWidget {
@@ -83,11 +82,8 @@ class _StadiumsScreenState extends ConsumerState<StadiumsScreen> {
               loading: () => _isGridView
                   ? _buildGridShimmer()
                   : _buildListShimmer(),
-              error: (error, stack) => Center(
-                child: AppErrorWidget(
-                  message: error.toString(),
-                  onRetry: () => ref.refresh(stadiumListProvider),
-                ),
+              error: (_, __) => const Center(
+                child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
               ),
             ),
           ),

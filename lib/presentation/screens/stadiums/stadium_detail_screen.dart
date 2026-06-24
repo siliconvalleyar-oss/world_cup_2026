@@ -5,7 +5,7 @@ import 'package:world_cup_2026/core/constants/app_constants.dart';
 import 'package:world_cup_2026/data/models/venue_model.dart';
 import 'package:world_cup_2026/presentation/providers/stadium_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
+import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
 
 class StadiumDetailScreen extends ConsumerWidget {
   final String stadiumId;
@@ -21,7 +21,7 @@ class StadiumDetailScreen extends ConsumerWidget {
       body: stadiumAsync.when(
         data: (stadium) {
           if (stadium == null) {
-            return const Center(child: AppErrorWidget(message: 'Stadium not found'));
+            return const Center(child: EmptyState(icon: Icons.stadium, title: 'Stadium not found', subtitle: ''));
           }
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -41,11 +41,8 @@ class StadiumDetailScreen extends ConsumerWidget {
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppConstants.primaryColor),
         ),
-        error: (error, stack) => Center(
-          child: AppErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.refresh(stadiumDetailProvider(stadiumId)),
-          ),
+        error: (_, __) => const Center(
+          child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
         ),
       ),
     );

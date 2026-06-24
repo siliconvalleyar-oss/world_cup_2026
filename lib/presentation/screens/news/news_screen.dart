@@ -7,7 +7,6 @@ import 'package:world_cup_2026/data/models/news_model.dart';
 import 'package:world_cup_2026/presentation/providers/news_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
 import 'package:world_cup_2026/presentation/widgets/shimmer_loading.dart';
 import 'package:intl/intl.dart';
 
@@ -87,11 +86,8 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                   );
                 },
               ),
-              error: (error, stack) => Center(
-                child: AppErrorWidget(
-                  message: error.toString(),
-                  onRetry: () => ref.refresh(newsListProvider),
-                ),
+              error: (_, __) => const Center(
+                child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
               ),
             ),
           ),

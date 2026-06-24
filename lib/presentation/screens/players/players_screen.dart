@@ -8,7 +8,6 @@ import 'package:world_cup_2026/presentation/providers/player_provider.dart';
 import 'package:world_cup_2026/presentation/providers/team_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
 import 'package:world_cup_2026/presentation/widgets/shimmer_loading.dart';
 
 class PlayersScreen extends ConsumerStatefulWidget {
@@ -87,11 +86,8 @@ class _PlayersScreenState extends ConsumerState<PlayersScreen> {
                   );
                 },
               ),
-              error: (error, stack) => Center(
-                child: AppErrorWidget(
-                  message: error.toString(),
-                  onRetry: () => ref.refresh(playerListProvider),
-                ),
+              error: (_, __) => const Center(
+                child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
               ),
             ),
           ),

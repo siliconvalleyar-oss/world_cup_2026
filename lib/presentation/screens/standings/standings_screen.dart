@@ -9,7 +9,7 @@ import 'package:world_cup_2026/presentation/providers/standing_provider.dart';
 import 'package:world_cup_2026/presentation/providers/settings_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/team_flag.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
+import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
 
 class StandingsScreen extends ConsumerStatefulWidget {
   const StandingsScreen({super.key});
@@ -70,11 +70,8 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen>
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppConstants.primaryColor),
         ),
-        error: (error, stack) => Center(
-          child: AppErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.refresh(groupListProvider),
-          ),
+        error: (_, __) => Center(
+          child: EmptyState(icon: Icons.wifi_off, title: l10n.connectionError, subtitle: l10n.pullToRefresh),
         ),
       ),
     );

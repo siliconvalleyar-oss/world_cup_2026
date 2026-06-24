@@ -9,7 +9,7 @@ import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/live_indicator.dart';
 import 'package:world_cup_2026/presentation/widgets/team_flag.dart';
 import 'package:world_cup_2026/presentation/widgets/score_display.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
+import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
 import 'package:intl/intl.dart';
 
 class MatchDetailScreen extends ConsumerStatefulWidget {
@@ -47,7 +47,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
         data: (match) {
           if (match == null) {
             return const Center(
-              child: AppErrorWidget(message: 'Match not found'),
+              child: EmptyState(icon: Icons.sports_soccer, title: 'Match not found', subtitle: ''),
             );
           }
           return CustomScrollView(
@@ -69,11 +69,8 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppConstants.primaryColor),
         ),
-        error: (error, stack) => Center(
-          child: AppErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.refresh(matchDetailProvider(widget.matchId)),
-          ),
+        error: (_, __) => const Center(
+          child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
         ),
       ),
     );

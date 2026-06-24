@@ -6,7 +6,7 @@ import 'package:world_cup_2026/data/models/player_model.dart';
 import 'package:world_cup_2026/presentation/providers/player_provider.dart';
 import 'package:world_cup_2026/presentation/providers/favorites_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
+import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
 
 class PlayerDetailScreen extends ConsumerWidget {
   final String playerId;
@@ -24,7 +24,7 @@ class PlayerDetailScreen extends ConsumerWidget {
       body: playerAsync.when(
         data: (player) {
           if (player == null) {
-            return const Center(child: AppErrorWidget(message: 'Player not found'));
+            return const Center(child: EmptyState(icon: Icons.person_off, title: 'Player not found', subtitle: ''));
           }
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -44,11 +44,8 @@ class PlayerDetailScreen extends ConsumerWidget {
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppConstants.primaryColor),
         ),
-        error: (error, stack) => Center(
-          child: AppErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.refresh(playerDetailProvider(playerId)),
-          ),
+        error: (_, __) => const Center(
+          child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
         ),
       ),
     );

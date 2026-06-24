@@ -7,7 +7,7 @@ import 'package:world_cup_2026/presentation/providers/team_provider.dart';
 import 'package:world_cup_2026/presentation/providers/favorites_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/team_flag.dart';
-import 'package:world_cup_2026/presentation/widgets/error_widget.dart';
+import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
 
 class TeamDetailScreen extends ConsumerWidget {
   final String teamId;
@@ -25,7 +25,7 @@ class TeamDetailScreen extends ConsumerWidget {
       body: teamAsync.when(
         data: (team) {
           if (team == null) {
-            return const Center(child: AppErrorWidget(message: 'Team not found'));
+            return const Center(child: EmptyState(icon: Icons.person_off, title: 'Team not found', subtitle: ''));
           }
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -40,11 +40,8 @@ class TeamDetailScreen extends ConsumerWidget {
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppConstants.primaryColor),
         ),
-        error: (error, stack) => Center(
-          child: AppErrorWidget(
-            message: error.toString(),
-            onRetry: () => ref.refresh(teamDetailProvider(teamId)),
-          ),
+        error: (_, __) => const Center(
+          child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
         ),
       ),
     );
