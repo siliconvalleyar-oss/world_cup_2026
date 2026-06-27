@@ -14,6 +14,8 @@ class VenueModel with _$VenueModel {
     double? latitude,
     double? longitude,
     String? image,
+    String? fifaName,
+    String? region,
   }) = _VenueModel;
 
   factory VenueModel.fromJson(Map<String, dynamic> json) =>

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/player_model.dart';
 import '../../data/datasources/local/world_cup_players_data.dart';
+import 'api_provider.dart';
 
 final playerListProvider = StateNotifierProvider<PlayerListNotifier, AsyncValue<List<PlayerModel>>>((ref) {
   return PlayerListNotifier();
@@ -70,6 +71,11 @@ final topAssistsProvider = Provider<AsyncValue<List<PlayerModel>>>((ref) {
       return sorted.take(10).toList();
     },
   );
+});
+
+final apiTopScorersProvider = FutureProvider<List<PlayerModel>>((ref) async {
+  final service = ref.read(theSportsDBServiceProvider);
+  return service.getTopScorers();
 });
 
 class PlayerListNotifier extends StateNotifier<AsyncValue<List<PlayerModel>>> {

@@ -20,6 +20,7 @@ class TeamModel with _$TeamModel {
     @Default(0) int goalsFor,
     @Default(0) int goalsAgainst,
     @Default(0) int points,
+    String? iso2,
   }) = _TeamModel;
 
   factory TeamModel.fromJson(Map<String, dynamic> json) =>

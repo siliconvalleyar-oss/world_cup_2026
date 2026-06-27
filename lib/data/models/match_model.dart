@@ -30,6 +30,8 @@ class MatchModel with _$MatchModel {
     List<EventModel>? events,
     MatchStatistics? statistics,
     Lineups? lineups,
+    String? homeTeamLabel,
+    String? awayTeamLabel,
   }) = _MatchModel;
 
   factory MatchModel.fromJson(Map<String, dynamic> json) =>
