@@ -17,7 +17,7 @@ class PlayerDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playerAsync = ref.watch(playerDetailProvider(playerId));
     final notifier = ref.read(favoritesProvider.notifier);
-    final isFavorite = notifier.isFavorite(playerId);
+    final isFavorite = ref.watch(favoritesProvider.select((s) => s.items.any((i) => i.id == playerId)));
 
     return Scaffold(
       backgroundColor: AppConstants.backgroundColor,
