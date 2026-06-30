@@ -101,3 +101,6 @@ app.*.map.json
 **/.env.*
 **/credentials.json
 APK/
+
+TAREAS_PENDIENTES.md
+docs/TAREAS_PENDIENTES.md
