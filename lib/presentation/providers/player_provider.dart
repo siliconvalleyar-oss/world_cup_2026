@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/player_model.dart';
 import '../../data/datasources/local/world_cup_players_data.dart';
+import '../../data/datasources/local/world_cup_scorers.dart';
 import 'api_provider.dart';
 
 final playerListProvider = StateNotifierProvider<PlayerListNotifier, AsyncValue<List<PlayerModel>>>((ref) {
@@ -76,6 +77,30 @@ final topAssistsProvider = Provider<AsyncValue<List<PlayerModel>>>((ref) {
 final apiTopScorersProvider = FutureProvider<List<PlayerModel>>((ref) async {
   final service = ref.read(theSportsDBServiceProvider);
   return service.getTopScorers();
+});
+
+final topScorersLeaderboardProvider = FutureProvider<List<PlayerModel>>((ref) async {
+  try {
+    final api = await ref.watch(apiTopScorersProvider.future);
+    if (api.isNotEmpty) {
+      final sorted = List<PlayerModel>.from(api)
+        ..sort((a, b) => b.goals.compareTo(a.goals));
+      return sorted.take(50).toList();
+    }
+  } catch (_) {}
+
+  final local = WorldCupScorers.getAll();
+  final list = local.map((m) => PlayerModel(
+    id: m['name'] as String,
+    name: m['name'] as String,
+    teamId: m['teamId'] as String?,
+    teamName: m['team'] as String?,
+    goals: (m['goals'] as int?) ?? 0,
+    position: m['position'] as String?,
+    nationality: m['nationality'] as String?,
+  )).toList();
+  list.sort((a, b) => b.goals.compareTo(a.goals));
+  return list;
 });
 
 class PlayerListNotifier extends StateNotifier<AsyncValue<List<PlayerModel>>> {

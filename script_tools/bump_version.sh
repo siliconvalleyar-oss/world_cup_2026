@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
 
 # ── Config ──────────────────────────────────────────────
 PUBSPEC="pubspec.yaml"
+VERSION_FILE="VERSION"
 REMOTE="origin"
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
@@ -13,27 +15,36 @@ info()  { echo -e "\033[36m➜\033[0m $*"; }
 ok()    { echo -e "\033[32m✔\033[0m $*"; }
 err()   { echo -e "\033[31m✘\033[0m $*" >&2; exit 1; }
 
-# ── 1. Get latest tag (fallback to v0.0.0+0) ──────────
+# ── 1. Get latest tag ──────────────────────────────────
 LATEST_TAG="$(git tag --sort=-version:refname | head -1)" || true
 if [[ -z "$LATEST_TAG" ]]; then
-  LATEST_TAG="v0.0.0+0"
+  LATEST_TAG="v0.0.0"
   info "No tags found — starting at $LATEST_TAG"
 fi
 
-# Strip leading 'v'
+# Parse major.minor.patch from tag (format: vX.Y.Z)
 RAW="${LATEST_TAG#v}"
-
-# Parse major.minor.patch+build
-if [[ "$RAW" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
+if [[ "$RAW" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
   MAJOR="${BASH_REMATCH[1]}"
   MINOR="${BASH_REMATCH[2]}"
   PATCH="${BASH_REMATCH[3]}"
-  BUILD="${BASH_REMATCH[4]}"
 else
-  err "Tag format not recognized: $LATEST_TAG (expected vX.Y.Z+B)"
+  err "Tag format not recognized: $LATEST_TAG (expected vX.Y.Z)"
 fi
 
-# ── 2. Check if there are changes since last tag ─────
+# ── 2. Get build number from pubspec.yaml ──────────────
+if [[ ! -f "$PUBSPEC" ]]; then
+  err "$PUBSPEC not found"
+fi
+
+PUBSPEC_VER="$(grep '^version: ' "$PUBSPEC" | sed 's/^version: *//')"
+if [[ "$PUBSPEC_VER" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
+  BUILD="${BASH_REMATCH[4]}"
+else
+  err "pubspec.yaml version format not recognized: $PUBSPEC_VER (expected X.Y.Z+B)"
+fi
+
+# ── 3. Check there are changes since last tag ────────
 TAG_RANGE="${LATEST_TAG}..HEAD"
 CHANGES=$(git log "$TAG_RANGE" --oneline 2>/dev/null || true)
 if [[ -z "$CHANGES" ]]; then
@@ -42,14 +53,14 @@ if [[ -z "$CHANGES" ]]; then
   exit 0
 fi
 
-# ── 3. Check for dirty tracked files ────────────────
+# ── 4. Check for dirty tracked files ─────────────────
 DIRTY="$(git status --porcelain --untracked-files=no)"
 if [[ -n "$DIRTY" ]]; then
   echo "$DIRTY"
   err "Uncommitted changes on tracked files — commit or stash first"
 fi
 
-# ── 4. Increment patch (0→9 then rollover) ──────────
+# ── 5. Increment patch (0→9 then rollover) ───────────
 PATCH=$((PATCH + 1))
 if (( PATCH > 9 )); then
   PATCH=0
@@ -62,38 +73,34 @@ fi
 BUILD=$((BUILD + 1))
 
 NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}+${BUILD}"
-NEW_TAG="v${NEW_VERSION}"
+NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
 
-# ── 5. Check if already tagged ───────────────────────
+# ── 6. Check if tag already exists ───────────────────
 if git rev-parse "$NEW_TAG" &>/dev/null; then
   err "Tag $NEW_TAG already exists"
 fi
 
-# ── 6. Update pubspec.yaml ────────────────────────────
-if [[ -f "$PUBSPEC" ]]; then
-  sed -i "s/^version: .*/version: $NEW_VERSION/" "$PUBSPEC"
-  info "Updated $PUBSPEC → $NEW_VERSION"
-else
-  err "$PUBSPEC not found"
-fi
+# ── 7. Update pubspec.yaml ───────────────────────────
+sed -i "s/^version: .*/version: $NEW_VERSION/" "$PUBSPEC"
+info "Updated $PUBSPEC → $NEW_VERSION"
 
-# ── 7. Commit changes ─────────────────────────────────
-git add "$PUBSPEC"
-# Include this script if it's new/untracked
-if [[ -f "bump_version.sh" ]] && ! git ls-files --error-unmatch bump_version.sh &>/dev/null 2>&1; then
-  git add bump_version.sh
-fi
+# ── 8. Update VERSION file ──────────────────────────
+echo "$NEW_TAG" > "$VERSION_FILE"
+info "Updated $VERSION_FILE → $NEW_TAG"
+
+# ── 9. Commit changes ────────────────────────────────
+git add "$PUBSPEC" "$VERSION_FILE"
 git commit -m "chore: bump version to $NEW_VERSION"
 ok "Committed changes"
 
-# ── 8. Tag ────────────────────────────────────────────
-git tag "$NEW_TAG"
+# ── 10. Tag (annotated) ──────────────────────────────
+git tag -a "$NEW_TAG" -m "Version $NEW_VERSION"
 ok "Tagged $NEW_TAG"
 
-# ── 9. Push ───────────────────────────────────────────
+# ── 11. Push ──────────────────────────────────────────
 info "Pushing to $REMOTE/$BRANCH ..."
 git push "$REMOTE" "$BRANCH" --tags
 ok "Pushed $BRANCH with tag $NEW_TAG"
 
 echo ""
-info "Done — bumped $LATEST_TAG → $NEW_TAG"
+info "Done — $LATEST_TAG → $NEW_TAG"

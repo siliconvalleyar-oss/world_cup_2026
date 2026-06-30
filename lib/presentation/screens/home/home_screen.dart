@@ -10,6 +10,7 @@ import 'package:world_cup_2026/data/models/team_model.dart';
 import 'package:world_cup_2026/presentation/providers/match_provider.dart';
 import 'package:world_cup_2026/presentation/providers/team_provider.dart';
 import 'package:world_cup_2026/presentation/providers/news_provider.dart';
+import 'package:world_cup_2026/presentation/providers/player_provider.dart';
 import 'package:world_cup_2026/presentation/providers/settings_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
 import 'package:world_cup_2026/presentation/widgets/match_card.dart';
@@ -95,6 +96,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _buildUpcomingMatchesSection(matchList, l10n, isDark),
                   const SizedBox(height: 24),
                   _buildRecentResultsSection(matchList, l10n, isDark),
+                  const SizedBox(height: 24),
+                  _buildTopScorersSection(isDark),
                   const SizedBox(height: 24),
                   _buildFeaturedNewsSection(newsList, l10n, isDark),
                   const SizedBox(height: 24),
@@ -239,6 +242,104 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           error: (_, __) => Padding(
             padding: const EdgeInsets.all(16),
             child: EmptyState(icon: Icons.wifi_off, title: l10n.connectionError, subtitle: l10n.pullToRefresh),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopScorersSection(bool isDark) {
+    final scorersAsync = ref.watch(topScorersLeaderboardProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: 'Top Scorers', onSeeAll: () => context.push('/top-scorers')),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 180,
+          child: scorersAsync.when(
+            data: (scorers) {
+              if (scorers.isEmpty) {
+                return Center(
+                  child: EmptyState(
+                    icon: Icons.sports_soccer,
+                    title: 'No scorers yet',
+                    subtitle: 'Goals will appear after matches are played',
+                  ),
+                );
+              }
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: scorers.length.clamp(0, 10),
+                itemBuilder: (context, index) {
+                  final player = scorers[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: GestureDetector(
+                      onTap: () => context.push('/top-scorers'),
+                      child: GlassmorphismCard(
+                        child: SizedBox(
+                          width: 110,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ClipOval(
+                                child: player.photo != null && player.photo!.isNotEmpty
+                                    ? Image.network(player.photo!, width: 48, height: 48, fit: BoxFit.cover)
+                                    : Container(
+                                        width: 48, height: 48,
+                                        decoration: const BoxDecoration(
+                                          color: AppConstants.cardColor, shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.person, color: AppConstants.secondaryTextColor),
+                                      ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                player.name,
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.sports_soccer, size: 12, color: AppConstants.primaryColor),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${player.goals}',
+                                    style: const TextStyle(
+                                      color: AppConstants.primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ).animate().fadeIn(delay: Duration(milliseconds: 100 * index), duration: 300.ms);
+                },
+              );
+            },
+            loading: () => ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: 5,
+              itemBuilder: (context, index) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: ShimmerLoading(pattern: ShimmerPattern.card),
+              ),
+            ),
+            error: (_, __) => Center(
+              child: EmptyState(icon: Icons.wifi_off, title: 'Error', subtitle: 'Pull to refresh'),
+            ),
           ),
         ),
       ],
