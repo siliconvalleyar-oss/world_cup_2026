@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:world_cup_2026/core/constants/app_constants.dart';
+import 'package:world_cup_2026/data/datasources/local/world_cup_fixtures.dart';
 import 'package:world_cup_2026/data/models/group_model.dart';
 import 'package:world_cup_2026/data/models/match_model.dart';
 import 'package:world_cup_2026/data/models/standing_model.dart';
@@ -15,112 +17,763 @@ class BracketTreeScreen extends ConsumerStatefulWidget {
   ConsumerState<BracketTreeScreen> createState() => _BracketTreeScreenState();
 }
 
-class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
-  static const double cw = 128;
-  static const double ch = 52;
-  static const double hGap = 38;
-  static const double vGap = 10;
-  static const double colW = cw + hGap;
+class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final groupsAsync = ref.watch(groupListProvider);
-
     return Scaffold(
       backgroundColor: AppConstants.backgroundColor,
-      body: groupsAsync.when(
-        data: (groups) {
-          if (groups.isEmpty) {
-            return const Center(child: Text('Loading standings...', style: TextStyle(color: AppConstants.secondaryTextColor)));
-          }
-          return _buildBracketFromStandings(groups);
-        },
-        loading: () => const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor)),
-        error: (_, __) => const Center(child: Text('Error loading data', style: TextStyle(color: AppConstants.secondaryTextColor))),
+      body: Column(
+        children: [
+          Container(
+            margin: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 8,
+            ),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: AppConstants.primaryColor,
+              unselectedLabelColor: AppConstants.secondaryTextColor,
+              indicatorColor: AppConstants.primaryColor,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              unselectedLabelStyle: const TextStyle(fontSize: 14),
+              tabs: const [
+                Tab(text: 'Fase de Grupos'),
+                Tab(text: 'Clasificados'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildGroupPhaseTab(),
+                _buildClasificadosTab(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBracketFromStandings(List<GroupModel> groups) {
-    final bracket = _computeBracket(groups);
-    final leftBracket = bracket['left']!;
-    final rightBracket = bracket['right']!;
-    final finalMatch = bracket['final']![0];
-    final thirdMatch = bracket['third']![0];
+  Widget _buildGroupPhaseTab() {
+    final groupsAsync = ref.watch(groupListProvider);
+    return groupsAsync.when(
+      data: (groups) {
+        if (groups.isEmpty) {
+          return const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor));
+        }
+        return _buildGroupGrid(groups);
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor)),
+      error: (_, __) => const Center(child: Text('Error', style: TextStyle(color: AppConstants.secondaryTextColor))),
+    );
+  }
 
-    final ly = _yPos(8);
-    final ly16 = _midY(4, ly);
-    final lyQF = _midY(2, ly16);
-    final lySF = _midY(1, lyQF);
-    final ry = _yPos(8);
-    final ry16 = _midY(4, ry);
-    final ryQF = _midY(2, ry16);
-    final rySF = _midY(1, ryQF);
+  Widget _buildGroupGrid(List<GroupModel> groups) {
+    final sortedGroups = List<GroupModel>.from(groups)
+      ..sort((a, b) => a.id.compareTo(b.id));
 
-    final totalH = ly.last + ch + 80;
-    final finalCY = lySF.isNotEmpty && rySF.isNotEmpty
-        ? (lySF[0] + rySF[0]) / 2
-        : totalH / 2 - ch / 2;
-    final thirdCY = finalCY + ch + 28;
-    final totalW = 9 * colW + cw;
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.82,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: sortedGroups.length,
+      itemBuilder: (context, index) => _buildGroupCard(sortedGroups[index]),
+    );
+  }
 
-    return Column(
-      children: [
-        Container(
-          height: 36,
-          color: AppConstants.backgroundColor,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            children: [
-              _lbl('R32'), SizedBox(width: colW - 52),
-              _lbl('R16'), SizedBox(width: colW - 52),
-              _lbl('CF'), SizedBox(width: colW - 40),
-              _lbl('SF'), SizedBox(width: colW - 30),
-              _lbl('FINAL'), SizedBox(width: colW - 20),
-              _lbl('SF'), SizedBox(width: colW - 40),
-              _lbl('CF'), SizedBox(width: colW - 52),
-              _lbl('R16'), SizedBox(width: colW - 52),
-              _lbl('R32'),
-            ],
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              physics: const BouncingScrollPhysics(),
-              child: SizedBox(
-                width: totalW,
-                height: totalH,
-                child: CustomPaint(
-                  painter: _BracketPainter(
-                    lR32Y: ly, lR16Y: ly16, lQFY: lyQF, lSFY: lySF,
-                    rR32Y: ry, rR16Y: ry16, rQFY: ryQF, rSFY: rySF,
-                    finalY: finalCY, cw: cw, ch: ch, hGap: hGap, colW: colW,
-                    lineColor: AppConstants.secondaryTextColor.withValues(alpha: 0.25),
-                  ),
-                  child: Stack(
-                    children: [
-                      for (int i = 0; i < 8; i++) _at(0, ly[i], leftBracket[i]),
-                      for (int i = 0; i < 4; i++) _at(1, ly16[i], _emptyMatch('lR16_$i')),
-                      for (int i = 0; i < 2; i++) _at(2, lyQF[i], _emptyMatch('lQF_$i')),
-                      _at(3, lySF.isNotEmpty ? lySF[0] : 0, _emptyMatch('lSF')),
-                      _at(4, finalCY, finalMatch, isFinal: true),
-                      _at(5, rySF.isNotEmpty ? rySF[0] : 0, _emptyMatch('rSF')),
-                      for (int i = 0; i < 2; i++) _at(6, ryQF[i], _emptyMatch('rQF_$i')),
-                      for (int i = 0; i < 4; i++) _at(7, ry16[i], _emptyMatch('rR16_$i')),
-                      for (int i = 0; i < 8; i++) _at(8, ry[i], rightBracket[i]),
-                      _at(4, thirdCY, thirdMatch, isThird: true),
-                    ],
-                  ),
-                ),
+  Widget _buildGroupCard(GroupModel group) {
+    final sortedTeams = List<StandingModel>.from(group.teams)
+      ..sort((a, b) {
+        final cmp = b.points.compareTo(a.points);
+        if (cmp != 0) return cmp;
+        final cmp2 = b.goalDifference.compareTo(a.goalDifference);
+        if (cmp2 != 0) return cmp2;
+        return b.goalsFor.compareTo(a.goalsFor);
+      });
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppConstants.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppConstants.primaryColor.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: AppConstants.primaryColor.withValues(alpha: 0.15),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Text(
+              'Grupo ${group.id}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppConstants.primaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
               ),
             ),
           ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              itemCount: sortedTeams.length,
+              itemBuilder: (context, index) {
+                final standing = sortedTeams[index];
+                final isQualified = index < 2;
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: isQualified
+                        ? AppConstants.secondaryColor.withValues(alpha: 0.1)
+                        : null,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: isQualified
+                                ? AppConstants.secondaryColor
+                                : AppConstants.secondaryTextColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      if (standing.team?.flag != null)
+                        TeamFlag(
+                          imageUrl: standing.team!.flag!,
+                          teamName: standing.team?.name ?? '',
+                          size: 14,
+                          shape: TeamFlagShape.circular,
+                          showBorder: false,
+                        )
+                      else
+                        Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: AppConstants.secondaryTextColor.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                        ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          standing.team?.name ?? '???',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isQualified ? Colors.white : AppConstants.secondaryTextColor,
+                            fontSize: 10,
+                            fontWeight: isQualified ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${standing.points}',
+                        style: TextStyle(
+                          color: isQualified ? AppConstants.secondaryColor : AppConstants.secondaryTextColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClasificadosTab() {
+    final groupsAsync = ref.watch(groupListProvider);
+    return groupsAsync.when(
+      data: (groups) {
+        if (groups.isEmpty) {
+          return const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor));
+        }
+        return _buildBracketTree(groups);
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor)),
+      error: (_, __) => const Center(child: Text('Error', style: TextStyle(color: AppConstants.secondaryTextColor))),
+    );
+  }
+
+  Widget _buildBracketTree(List<GroupModel> groups) {
+    final bracketData = _computeBracket(groups);
+    final knockoutMatches = WorldCupFixtures.getKnockoutMatches();
+
+    final r32Left = bracketData['left']!;
+    final r32Right = bracketData['right']!;
+
+    final allR32 = [...r32Left, ...r32Right];
+
+    final r16Matches = _buildStageMatches('round_of_16', knockoutMatches, allR32);
+    final qfMatches = _buildStageMatches('quarter_final', knockoutMatches, r16Matches);
+    final sfMatches = _buildStageMatches('semi_final', knockoutMatches, qfMatches);
+    final finalMatch = _buildStageMatches('final', knockoutMatches, sfMatches);
+    final thirdMatch = _buildStageMatches('third_place', knockoutMatches, sfMatches);
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            _buildStageSection('Octavos de Final - R32', '3 jul - 7 jul 2026', allR32, Icons.sports_soccer),
+            _buildArrow(),
+            _buildStageSection('Cuartos de Final - R16', '9 jul - 10 jul 2026', r16Matches, Icons.sports_soccer),
+            _buildArrow(),
+            _buildStageSection('Semifinales - CF', '14 jul - 15 jul 2026', qfMatches, Icons.sports_soccer),
+            _buildArrow(),
+            _buildStageSection('Semifinal - SF', '18 jul - 19 jul 2026', sfMatches, Icons.emoji_events),
+            _buildArrow(),
+            if (thirdMatch.isNotEmpty)
+              _buildSingleMatchCard(thirdMatch.first, 'Tercer Puesto', isThird: true),
+            if (thirdMatch.isNotEmpty) const SizedBox(height: 8),
+            if (finalMatch.isNotEmpty)
+              _buildSingleMatchCard(finalMatch.first, 'FINAL', isFinal: true),
+            const SizedBox(height: 24),
+          ],
         ),
+      ),
+    );
+  }
+
+  List<MatchModel> _buildStageMatches(
+    String stage,
+    List<MatchModel> knockoutFixtures,
+    List<MatchModel> previousStage,
+  ) {
+    final fixtures = knockoutFixtures.where((m) => m.stage == stage).toList();
+    if (previousStage.isEmpty) return fixtures;
+
+    final result = <MatchModel>[];
+    for (int i = 0; i < fixtures.length; i++) {
+      final fixture = fixtures[i];
+      final topIdx = i * 2;
+      final botIdx = i * 2 + 1;
+
+      final home = topIdx < previousStage.length ? _getWinner(previousStage[topIdx]) : null;
+      final away = botIdx < previousStage.length ? _getWinner(previousStage[botIdx]) : null;
+
+      result.add(MatchModel(
+        id: fixture.id,
+        homeTeamId: home?.teamId ?? fixture.homeTeamId,
+        awayTeamId: away?.teamId ?? fixture.awayTeamId,
+        homeTeam: home?.team ?? fixture.homeTeam,
+        awayTeam: away?.team ?? fixture.awayTeam,
+        homeScore: fixture.homeScore,
+        awayScore: fixture.awayScore,
+        status: fixture.status,
+        stage: fixture.stage,
+        date: fixture.date,
+        time: fixture.time,
+        venue: fixture.venue,
+      ));
+    }
+    return result;
+  }
+
+  StandingModel? _getWinner(MatchModel match) {
+    if (match.status == 'finished' || match.status == 'ft') {
+      if (match.homeScore > match.awayScore) {
+        return StandingModel(teamId: match.homeTeamId, team: match.homeTeam);
+      } else if (match.awayScore > match.homeScore) {
+        return StandingModel(teamId: match.awayTeamId, team: match.awayTeam);
+      }
+    }
+    if (match.homeTeamId.isNotEmpty) {
+      return StandingModel(teamId: match.homeTeamId, team: match.homeTeam);
+    }
+    return null;
+  }
+
+  Widget _buildStageSection(String title, String dateRange, List<MatchModel> matches, IconData icon) {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppConstants.primaryColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppConstants.primaryColor, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      dateRange,
+                      style: TextStyle(
+                        color: AppConstants.secondaryTextColor,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${matches.length}',
+                  style: const TextStyle(
+                    color: AppConstants.primaryColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...matches.map((m) => Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: _buildMatchCard(m),
+        )),
       ],
+    );
+  }
+
+  Widget _buildMatchCard(MatchModel match) {
+    final isFinished = match.status == 'finished' || match.status == 'ft';
+    final homeWin = isFinished && match.homeScore > match.awayScore;
+    final awayWin = isFinished && match.awayScore > match.homeScore;
+    final hasHome = match.homeTeamId.isNotEmpty;
+    final hasAway = match.awayTeamId.isNotEmpty;
+    final isKnockout = match.stage != 'group_stage';
+
+    String dateStr = '';
+    String timeStr = '';
+    try {
+      dateStr = DateFormat('dd MMM', 'es').format(match.date);
+      if (match.time != null) {
+        timeStr = match.time!;
+      } else {
+        timeStr = DateFormat('HH:mm').format(match.date);
+      }
+    } catch (_) {
+      dateStr = DateFormat('dd MMM').format(match.date);
+      timeStr = DateFormat('HH:mm').format(match.date);
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (isKnockout) {
+          context.push('/match/${match.id}');
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppConstants.cardColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isFinished
+                ? (homeWin || awayWin
+                    ? AppConstants.secondaryColor.withValues(alpha: 0.4)
+                    : AppConstants.secondaryTextColor.withValues(alpha: 0.2))
+                : AppConstants.secondaryTextColor.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.calendar_today, size: 10, color: AppConstants.secondaryTextColor),
+                const SizedBox(width: 4),
+                Text(
+                  '$dateStr  •  $timeStr',
+                  style: TextStyle(
+                    color: AppConstants.secondaryTextColor,
+                    fontSize: 10,
+                  ),
+                ),
+                if (match.venue != null) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.stadium, size: 10, color: AppConstants.secondaryTextColor),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: Text(
+                      match.venue?.name ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppConstants.secondaryTextColor,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildTeamRow(
+              teamName: match.homeTeam?.name,
+              flag: match.homeTeam?.flag,
+              score: match.homeScore,
+              isWinner: homeWin,
+              isFinished: isFinished,
+              hasTeam: hasHome,
+              isHome: true,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Expanded(child: Divider(color: AppConstants.secondaryTextColor.withValues(alpha: 0.2))),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isFinished
+                          ? AppConstants.secondaryColor.withValues(alpha: 0.15)
+                          : AppConstants.secondaryTextColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isFinished ? '${match.homeScore} - ${match.awayScore}' : 'VS',
+                      style: TextStyle(
+                        color: isFinished ? AppConstants.secondaryColor : AppConstants.secondaryTextColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: AppConstants.secondaryTextColor.withValues(alpha: 0.2))),
+                ],
+              ),
+            ),
+            _buildTeamRow(
+              teamName: match.awayTeam?.name,
+              flag: match.awayTeam?.flag,
+              score: match.awayScore,
+              isWinner: awayWin,
+              isFinished: isFinished,
+              hasTeam: hasAway,
+              isHome: false,
+            ),
+            if (isFinished && (homeWin || awayWin))
+              Container(
+                margin: const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppConstants.secondaryColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, size: 12, color: AppConstants.secondaryColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Clasifica: ${homeWin ? (match.homeTeam?.name ?? '???') : (match.awayTeam?.name ?? '???')}',
+                      style: TextStyle(
+                        color: AppConstants.secondaryColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamRow({
+    required String? teamName,
+    required String? flag,
+    required int score,
+    required bool isWinner,
+    required bool isFinished,
+    required bool hasTeam,
+    required bool isHome,
+  }) {
+    final displayName = hasTeam ? (teamName ?? '???') : 'Por definir (TBD)';
+    final isEmpty = !hasTeam;
+
+    return Row(
+      children: [
+        if (flag != null && hasTeam)
+          TeamFlag(
+            imageUrl: flag,
+            teamName: teamName ?? '',
+            size: 22,
+            shape: TeamFlagShape.circular,
+            showBorder: false,
+          )
+        else
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: AppConstants.secondaryTextColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(Icons.question_mark, size: 10, color: AppConstants.secondaryTextColor),
+          ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            displayName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isEmpty
+                  ? AppConstants.secondaryTextColor
+                  : isWinner
+                      ? AppConstants.secondaryColor
+                      : Colors.white,
+              fontSize: 13,
+              fontWeight: isWinner
+                  ? FontWeight.bold
+                  : isEmpty
+                      ? FontWeight.normal
+                      : FontWeight.w500,
+            ),
+          ),
+        ),
+        if (isFinished && hasTeam)
+          Container(
+            width: 28,
+            height: 22,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isWinner
+                  ? AppConstants.secondaryColor.withValues(alpha: 0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              '$score',
+              style: TextStyle(
+                color: isWinner ? AppConstants.secondaryColor : AppConstants.secondaryTextColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSingleMatchCard(MatchModel match, String title, {bool isFinal = false, bool isThird = false}) {
+    final isFinished = match.status == 'finished' || match.status == 'ft';
+    final homeWin = isFinished && match.homeScore > match.awayScore;
+    final awayWin = isFinished && match.awayScore > match.homeScore;
+
+    final borderColor = isFinal
+        ? const Color(0xFFFFD700)
+        : isThird
+            ? const Color(0xFFCD7F32)
+            : AppConstants.primaryColor;
+
+    String dateStr = '';
+    String timeStr = '';
+    try {
+      dateStr = DateFormat('dd MMM', 'es').format(match.date);
+      timeStr = match.time ?? DateFormat('HH:mm').format(match.date);
+    } catch (_) {
+      dateStr = DateFormat('dd MMM').format(match.date);
+      timeStr = DateFormat('HH:mm').format(match.date);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isFinal
+            ? const Color(0xFF1A1500)
+            : isThird
+                ? const Color(0xFF151008)
+                : AppConstants.cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor.withValues(alpha: 0.6), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: borderColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: borderColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.calendar_today, size: 11, color: AppConstants.secondaryTextColor),
+              const SizedBox(width: 4),
+              Text(
+                '$dateStr  •  $timeStr',
+                style: TextStyle(color: AppConstants.secondaryTextColor, fontSize: 11),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildTeamRow(
+            teamName: match.homeTeam?.name,
+            flag: match.homeTeam?.flag,
+            score: match.homeScore,
+            isWinner: homeWin,
+            isFinished: isFinished,
+            hasTeam: match.homeTeamId.isNotEmpty,
+            isHome: true,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Expanded(child: Divider(color: borderColor.withValues(alpha: 0.3))),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isFinished
+                        ? borderColor.withValues(alpha: 0.2)
+                        : borderColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isFinished ? '${match.homeScore} - ${match.awayScore}' : 'VS',
+                    style: TextStyle(
+                      color: borderColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: borderColor.withValues(alpha: 0.3))),
+              ],
+            ),
+          ),
+          _buildTeamRow(
+            teamName: match.awayTeam?.name,
+            flag: match.awayTeam?.flag,
+            score: match.awayScore,
+            isWinner: awayWin,
+            isFinished: isFinished,
+            hasTeam: match.awayTeamId.isNotEmpty,
+            isHome: false,
+          ),
+          if (isFinished && (homeWin || awayWin))
+            Container(
+              margin: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              decoration: BoxDecoration(
+                color: borderColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.emoji_events, size: 14, color: borderColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Campeón: ${homeWin ? (match.homeTeam?.name ?? '???') : (match.awayTeam?.name ?? '???')}',
+                    style: TextStyle(
+                      color: borderColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArrow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 2,
+            height: 20,
+            color: AppConstants.primaryColor.withValues(alpha: 0.3),
+          ),
+          Icon(
+            Icons.keyboard_arrow_down,
+            color: AppConstants.primaryColor.withValues(alpha: 0.5),
+            size: 20,
+          ),
+        ],
+      ),
     );
   }
 
@@ -162,216 +815,52 @@ class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
     StandingModel? findSecond(String group) => second[group];
     StandingModel? findThird(int index) => index < bestThird.length ? bestThird[index] : null;
 
-    MatchModel buildMatch(String id, StandingModel? home, StandingModel? away, String stage) {
+    final knockoutFixtures = WorldCupFixtures.getKnockoutMatches();
+    final r32Fixtures = knockoutFixtures.where((m) => m.stage == 'round_of_32').toList();
+
+    MatchModel buildMatch(int fixtureIndex, String id, StandingModel? home, StandingModel? away, String stage) {
+      final fixture = fixtureIndex < r32Fixtures.length ? r32Fixtures[fixtureIndex] : null;
       return MatchModel(
         id: id,
-        homeTeamId: home?.teamId ?? '',
-        awayTeamId: away?.teamId ?? '',
-        homeTeam: home?.team,
-        awayTeam: away?.team,
-        date: DateTime(2026, 7, 1),
+        homeTeamId: home?.teamId ?? fixture?.homeTeamId ?? '',
+        awayTeamId: away?.teamId ?? fixture?.awayTeamId ?? '',
+        homeTeam: home?.team ?? fixture?.homeTeam,
+        awayTeam: away?.team ?? fixture?.awayTeam,
+        homeScore: fixture?.homeScore ?? 0,
+        awayScore: fixture?.awayScore ?? 0,
+        status: fixture?.status ?? 'pending',
+        date: fixture?.date ?? DateTime(2026, 7, 1),
+        time: fixture?.time,
         stage: stage,
+        venue: fixture?.venue,
       );
     }
 
     final left = [
-      buildMatch('R32_01', findFirst('A'), findSecond('B'), 'round_of_32'),
-      buildMatch('R32_02', findFirst('C'), findSecond('D'), 'round_of_32'),
-      buildMatch('R32_03', findFirst('E'), findSecond('F'), 'round_of_32'),
-      buildMatch('R32_04', findFirst('G'), findSecond('H'), 'round_of_32'),
-      buildMatch('R32_05', findFirst('B'), findSecond('A'), 'round_of_32'),
-      buildMatch('R32_06', findFirst('D'), findSecond('C'), 'round_of_32'),
-      buildMatch('R32_07', findFirst('F'), findSecond('E'), 'round_of_32'),
-      buildMatch('R32_08', findFirst('H'), findSecond('G'), 'round_of_32'),
+      buildMatch(0, 'R32_01', findFirst('A'), findSecond('B'), 'round_of_32'),
+      buildMatch(1, 'R32_02', findFirst('C'), findSecond('D'), 'round_of_32'),
+      buildMatch(2, 'R32_03', findFirst('E'), findSecond('F'), 'round_of_32'),
+      buildMatch(3, 'R32_04', findFirst('G'), findSecond('H'), 'round_of_32'),
+      buildMatch(4, 'R32_05', findFirst('B'), findSecond('A'), 'round_of_32'),
+      buildMatch(5, 'R32_06', findFirst('D'), findSecond('C'), 'round_of_32'),
+      buildMatch(6, 'R32_07', findFirst('F'), findSecond('E'), 'round_of_32'),
+      buildMatch(7, 'R32_08', findFirst('H'), findSecond('G'), 'round_of_32'),
     ];
 
     final right = [
-      buildMatch('R32_09', findFirst('I'), findSecond('J'), 'round_of_32'),
-      buildMatch('R32_10', findFirst('K'), findSecond('L'), 'round_of_32'),
-      buildMatch('R32_11', findFirst('J'), findSecond('I'), 'round_of_32'),
-      buildMatch('R32_12', findFirst('L'), findSecond('K'), 'round_of_32'),
-      buildMatch('R32_13', findThird(0), findThird(1), 'round_of_32'),
-      buildMatch('R32_14', findThird(2), findThird(3), 'round_of_32'),
-      buildMatch('R32_15', findThird(4), findThird(5), 'round_of_32'),
-      buildMatch('R32_16', findThird(6), findThird(7), 'round_of_32'),
+      buildMatch(8, 'R32_09', findFirst('I'), findSecond('J'), 'round_of_32'),
+      buildMatch(9, 'R32_10', findFirst('K'), findSecond('L'), 'round_of_32'),
+      buildMatch(10, 'R32_11', findFirst('J'), findSecond('I'), 'round_of_32'),
+      buildMatch(11, 'R32_12', findFirst('L'), findSecond('K'), 'round_of_32'),
+      buildMatch(12, 'R32_13', findThird(0), findThird(1), 'round_of_32'),
+      buildMatch(13, 'R32_14', findThird(2), findThird(3), 'round_of_32'),
+      buildMatch(14, 'R32_15', findThird(4), findThird(5), 'round_of_32'),
+      buildMatch(15, 'R32_16', findThird(6), findThird(7), 'round_of_32'),
     ];
 
-    final finalMatch = buildMatch('FINAL', null, null, 'final');
-    final thirdMatch = buildMatch('THIRD', null, null, 'third_place');
+    final finalMatch = buildMatch(16, 'FINAL', null, null, 'final');
+    final thirdMatch = buildMatch(17, 'THIRD', null, null, 'third_place');
 
     return {'left': left, 'right': right, 'final': [finalMatch], 'third': [thirdMatch]};
   }
-
-  List<double> _yPos(int n) => List.generate(n, (i) => i * (ch + vGap));
-  List<double> _midY(int n, List<double> py) =>
-      List.generate(n, (i) => (py[i * 2] + py[i * 2 + 1]) / 2);
-
-  MatchModel _emptyMatch(String id) => MatchModel(
-    id: id, homeTeamId: '', awayTeamId: '', date: DateTime(2026, 7, 10), stage: 'round_of_16',
-  );
-
-  Widget _lbl(String t) => Text(t, style: const TextStyle(color: AppConstants.primaryColor, fontSize: 10, fontWeight: FontWeight.bold));
-
-  Widget _at(int col, double y, MatchModel m, {bool isFinal = false, bool isThird = false}) =>
-      Positioned(left: col * colW, top: y, child: _card(m, isFinal: isFinal, isThird: isThird));
-
-  Widget _card(MatchModel m, {bool isFinal = false, bool isThird = false}) {
-    final finished = m.status == 'finished' || m.status == 'ft';
-    final hw = finished && m.homeScore > m.awayScore;
-    final aw = finished && m.awayScore > m.homeScore;
-    final hasH = m.homeTeamId.isNotEmpty;
-    final hasA = m.awayTeamId.isNotEmpty;
-    final w = isFinal ? cw + 12 : cw;
-    final h = isFinal ? ch + 12 : (isThird ? ch - 2 : ch);
-
-    final bc = isFinal
-        ? const Color(0xFFFFD700)
-        : isThird
-            ? AppConstants.primaryColor.withValues(alpha: 0.5)
-            : AppConstants.secondaryColor.withValues(alpha: 0.2);
-
-    return GestureDetector(
-      onTap: () => context.push('/match/${m.id}'),
-      child: Container(
-        width: w, height: h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: bc, width: 1),
-          color: isFinal ? const Color(0xFF1A1500) : isThird ? const Color(0xFF0A1520) : null,
-          gradient: !isFinal && !isThird ? LinearGradient(
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: [Colors.white.withValues(alpha: 0.06), Colors.white.withValues(alpha: 0.02)],
-          ) : null,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _row(m.homeTeam?.name ?? (hasH ? '' : 'TBD'), m.homeTeam?.flag, m.homeScore, hw, hasH, finished),
-            Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 1), color: AppConstants.secondaryTextColor.withValues(alpha: 0.15)),
-            _row(m.awayTeam?.name ?? (hasA ? '' : 'TBD'), m.awayTeam?.flag, m.awayScore, aw, hasA, finished),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _row(String name, String? flag, int score, bool win, bool filled, bool fin) {
-    final empty = name.isEmpty;
-    return Row(
-      children: [
-        if (!empty && flag != null)
-          TeamFlag(imageUrl: flag, teamName: name, size: 14, shape: TeamFlagShape.circular, showBorder: false)
-        else
-          Container(width: 14, height: 14, decoration: BoxDecoration(color: AppConstants.cardColor, borderRadius: BorderRadius.circular(7)),
-            child: const Icon(Icons.question_mark, size: 7, color: AppConstants.secondaryTextColor)),
-        const SizedBox(width: 3),
-        Expanded(
-          child: Text(empty ? 'TBD' : name, maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: win ? AppConstants.secondaryColor : empty ? AppConstants.secondaryTextColor : Colors.white,
-              fontSize: 9, fontWeight: win ? FontWeight.bold : FontWeight.normal)),
-        ),
-        if (fin && !empty)
-          Text('$score', style: TextStyle(color: win ? AppConstants.secondaryColor : Colors.white, fontSize: 10, fontWeight: FontWeight.bold))
-        else if (!fin && !empty)
-          const Text('-', style: TextStyle(color: AppConstants.secondaryTextColor, fontSize: 10))
-        else
-          const SizedBox(width: 10),
-      ],
-    );
-  }
-}
-
-class _BracketPainter extends CustomPainter {
-  final List<double> lR32Y, lR16Y, lQFY, lSFY;
-  final List<double> rR32Y, rR16Y, rQFY, rSFY;
-  final double finalY;
-  final double cw, ch, hGap, colW;
-  final Color lineColor;
-
-  _BracketPainter({
-    required this.lR32Y, required this.lR16Y, required this.lQFY, required this.lSFY,
-    required this.rR32Y, required this.rR16Y, required this.rQFY, required this.rSFY,
-    required this.finalY,
-    required this.cw, required this.ch, required this.hGap, required this.colW,
-    required this.lineColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = lineColor
-      ..strokeWidth = 1.2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    for (int i = 0; i < 4; i++) {
-      _leftConn(canvas, p, 0, lR32Y[i * 2], lR32Y[i * 2 + 1], lR16Y[i]);
-    }
-    for (int i = 0; i < 2; i++) {
-      _leftConn(canvas, p, 1, lR16Y[i * 2], lR16Y[i * 2 + 1], lQFY[i]);
-    }
-    if (lQFY.length >= 2) {
-      _leftConn(canvas, p, 2, lQFY[0], lQFY[1], lSFY.isNotEmpty ? lSFY[0] : 0);
-    }
-    if (lSFY.isNotEmpty) {
-      final x1 = 3 * colW + cw;
-      final mx = x1 + hGap / 2;
-      final y = lSFY[0] + ch / 2;
-      final fy = finalY + (ch + 12) / 2;
-      canvas.drawLine(Offset(x1, y), Offset(mx, y), p);
-      canvas.drawLine(Offset(mx, y), Offset(mx, fy), p);
-      canvas.drawLine(Offset(mx, fy), Offset(4 * colW, fy), p);
-    }
-
-    for (int i = 0; i < 4; i++) {
-      _rightConn(canvas, p, 8, rR32Y[i * 2], rR32Y[i * 2 + 1], rR16Y[i]);
-    }
-    for (int i = 0; i < 2; i++) {
-      _rightConn(canvas, p, 7, rR16Y[i * 2], rR16Y[i * 2 + 1], rQFY[i]);
-    }
-    if (rQFY.length >= 2) {
-      _rightConn(canvas, p, 6, rQFY[0], rQFY[1], rSFY.isNotEmpty ? rSFY[0] : 0);
-    }
-    if (rSFY.isNotEmpty) {
-      final x1 = 5 * colW;
-      final mx = x1 - hGap / 2;
-      final y = rSFY[0] + ch / 2;
-      final fy = finalY + (ch + 12) / 2;
-      canvas.drawLine(Offset(x1, y), Offset(mx, y), p);
-      canvas.drawLine(Offset(mx, y), Offset(mx, fy), p);
-      canvas.drawLine(Offset(mx, fy), Offset(5 * colW, fy), p);
-    }
-  }
-
-  void _leftConn(Canvas canvas, Paint p, int col, double topY, double botY, double nextY) {
-    final x1 = col * colW + cw;
-    final mx = x1 + hGap / 2;
-    final x2 = (col + 1) * colW;
-    final ty = topY + ch / 2;
-    final by = botY + ch / 2;
-    final ny = nextY + ch / 2;
-
-    canvas.drawLine(Offset(x1, ty), Offset(mx, ty), p);
-    canvas.drawLine(Offset(x1, by), Offset(mx, by), p);
-    canvas.drawLine(Offset(mx, ty), Offset(mx, by), p);
-    canvas.drawLine(Offset(mx, ny), Offset(x2, ny), p);
-  }
-
-  void _rightConn(Canvas canvas, Paint p, int col, double topY, double botY, double nextY) {
-    final x1 = col * colW;
-    final mx = x1 - hGap / 2;
-    final x2 = (col - 1) * colW + cw;
-    final ty = topY + ch / 2;
-    final by = botY + ch / 2;
-    final ny = nextY + ch / 2;
-
-    canvas.drawLine(Offset(x1, ty), Offset(mx, ty), p);
-    canvas.drawLine(Offset(x1, by), Offset(mx, by), p);
-    canvas.drawLine(Offset(mx, ty), Offset(mx, by), p);
-    canvas.drawLine(Offset(mx, ny), Offset(x2, ny), p);
-  }
-
-  @override
-  bool shouldRepaint(covariant _BracketPainter old) => false;
 }
