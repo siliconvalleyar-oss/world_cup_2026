@@ -16,6 +16,7 @@ import '../screens/news/news_detail_screen.dart';
 import '../screens/favorites/favorites_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/knockout/knockout_screen.dart';
+import '../screens/knockout/bracket_tree_screen.dart';
 import '../screens/top_scorers/top_scorers_screen.dart';
 import '../widgets/liquid_bottom_bar.dart';
 
@@ -121,6 +122,11 @@ final appRouter = GoRouter(
       path: '/knockout',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const KnockoutScreen(),
+    ),
+    GoRoute(
+      path: '/bracket-tree',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const BracketTreeScreen(),
     ),
     GoRoute(
       path: '/top-scorers',

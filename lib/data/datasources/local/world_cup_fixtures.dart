@@ -1,5 +1,4 @@
 import 'package:world_cup_2026/data/models/match_model.dart';
-import 'package:world_cup_2026/data/models/team_model.dart';
 import 'package:world_cup_2026/data/datasources/local/world_cup_local_data.dart';
 
 class WorldCupFixtures {
@@ -138,6 +137,32 @@ class WorldCupFixtures {
     _KnockoutFixture('R32_14', null, null, '2026-07-06T20:00:00', 'Round of 32', '14', false),      // TBD vs TBD
     _KnockoutFixture('R32_15', null, null, '2026-07-07T17:00:00', 'Round of 32', '15', false),      // TBD vs TBD
     _KnockoutFixture('R32_16', null, null, '2026-07-07T20:00:00', 'Round of 32', '16', false),      // TBD vs TBD
+
+    // === ROUND OF 16 ===
+    _KnockoutFixture('R16_01', null, null, '2026-07-09T17:00:00', 'Round of 16', '3', false),       // W(R32_01) vs W(R32_02)
+    _KnockoutFixture('R16_02', null, null, '2026-07-09T20:00:00', 'Round of 16', '4', false),       // W(R32_03) vs W(R32_04)
+    _KnockoutFixture('R16_03', null, null, '2026-07-10T17:00:00', 'Round of 16', '5', false),       // W(R32_05) vs W(R32_06)
+    _KnockoutFixture('R16_04', null, null, '2026-07-10T20:00:00', 'Round of 16', '6', false),       // W(R32_07) vs W(R32_08)
+    _KnockoutFixture('R16_05', null, null, '2026-07-09T17:00:00', 'Round of 16', '7', false),       // W(R32_09) vs W(R32_10)
+    _KnockoutFixture('R16_06', null, null, '2026-07-09T20:00:00', 'Round of 16', '8', false),       // W(R32_11) vs W(R32_12)
+    _KnockoutFixture('R16_07', null, null, '2026-07-10T17:00:00', 'Round of 16', '9', false),       // W(R32_13) vs W(R32_14)
+    _KnockoutFixture('R16_08', null, null, '2026-07-10T20:00:00', 'Round of 16', '10', false),      // W(R32_15) vs W(R32_16)
+
+    // === QUARTER-FINALS ===
+    _KnockoutFixture('QF_01', null, null, '2026-07-14T17:00:00', 'Quarter-final', '11', false),     // W(R16_01) vs W(R16_02)
+    _KnockoutFixture('QF_02', null, null, '2026-07-14T20:00:00', 'Quarter-final', '12', false),     // W(R16_03) vs W(R16_04)
+    _KnockoutFixture('QF_03', null, null, '2026-07-15T17:00:00', 'Quarter-final', '13', false),     // W(R16_05) vs W(R16_06)
+    _KnockoutFixture('QF_04', null, null, '2026-07-15T20:00:00', 'Quarter-final', '14', false),     // W(R16_07) vs W(R16_08)
+
+    // === SEMI-FINALS ===
+    _KnockoutFixture('SF_01', null, null, '2026-07-18T17:00:00', 'Semi-final', '2', false),          // W(QF_01) vs W(QF_02)
+    _KnockoutFixture('SF_02', null, null, '2026-07-19T17:00:00', 'Semi-final', '5', false),          // W(QF_03) vs W(QF_04)
+
+    // === THIRD PLACE ===
+    _KnockoutFixture('THIRD', null, null, '2026-07-19T13:00:00', 'Third place', '15', false),        // L(SF_01) vs L(SF_02)
+
+    // === FINAL ===
+    _KnockoutFixture('FINAL', null, null, '2026-07-19T20:00:00', 'Final', '2', false),               // W(SF_01) vs W(SF_02)
   ];
 
   static List<MatchModel> getGroupStageMatches() {
@@ -182,7 +207,7 @@ class WorldCupFixtures {
     for (final f in _knockoutFixtures) {
       final home = f.homeTeamId != null ? teamsMap[f.homeTeamId] : null;
       final away = f.awayTeamId != null ? teamsMap[f.awayTeamId] : null;
-      final venueForMatch = f.venueId != null ? venuesMap[f.venueId] : null;
+      final venueForMatch = venuesMap[f.venueId];
 
       DateTime matchDate;
       try {
@@ -201,7 +226,7 @@ class WorldCupFixtures {
         awayScore: f.awayScore,
         status: f.isConfirmed ? 'scheduled' : 'pending',
         group: null,
-        stage: 'round_of_32',
+        stage: _mapKnockoutStage(f.stage),
         venue: venueForMatch,
         date: matchDate,
       ));
@@ -212,6 +237,25 @@ class WorldCupFixtures {
 
   static List<MatchModel> getKnockoutMatches() {
     return getGroupStageMatches().where((m) => m.stage != 'group_stage').toList();
+  }
+
+  static String _mapKnockoutStage(String stage) {
+    switch (stage.toLowerCase()) {
+      case 'round of 32':
+        return 'round_of_32';
+      case 'round of 16':
+        return 'round_of_16';
+      case 'quarter-final':
+        return 'quarter_final';
+      case 'semi-final':
+        return 'semi_final';
+      case 'third place':
+        return 'third_place';
+      case 'final':
+        return 'final';
+      default:
+        return 'round_of_32';
+    }
   }
 }
 

@@ -1,26 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:world_cup_2026/core/constants/app_constants.dart';
-import 'package:world_cup_2026/data/models/match_model.dart';
-import 'package:world_cup_2026/data/models/team_model.dart';
 import 'package:world_cup_2026/presentation/providers/match_provider.dart';
-import 'package:world_cup_2026/presentation/widgets/glassmorphism_card.dart';
-import 'package:world_cup_2026/presentation/widgets/team_flag.dart';
 import 'package:world_cup_2026/presentation/widgets/empty_state.dart';
-import 'package:intl/intl.dart';
 
-class KnockoutScreen extends ConsumerStatefulWidget {
+class KnockoutScreen extends ConsumerWidget {
   const KnockoutScreen({super.key});
 
   @override
-  ConsumerState<KnockoutScreen> createState() => _KnockoutScreenState();
-}
-
-class _KnockoutScreenState extends ConsumerState<KnockoutScreen> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final knockoutMatches = ref.watch(knockoutMatchesProvider);
 
     return Scaffold(
@@ -28,11 +17,8 @@ class _KnockoutScreenState extends ConsumerState<KnockoutScreen> {
       appBar: AppBar(
         backgroundColor: AppConstants.backgroundColor,
         title: const Text(
-          'Round of 32',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          'Knockout Stage',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: knockoutMatches.when(
@@ -44,249 +30,85 @@ class _KnockoutScreenState extends ConsumerState<KnockoutScreen> {
                 children: [
                   Icon(Icons.emoji_events, size: 64, color: AppConstants.secondaryTextColor),
                   SizedBox(height: 16),
-                  Text(
-                    'No knockout matches yet',
-                    style: TextStyle(color: AppConstants.secondaryTextColor, fontSize: 18),
-                  ),
+                  Text('No knockout matches yet', style: TextStyle(color: AppConstants.secondaryTextColor, fontSize: 18)),
                   SizedBox(height: 8),
-                  Text(
-                    'Round of 32 will begin after Matchday 3',
-                    style: TextStyle(color: AppConstants.secondaryTextColor),
-                  ),
+                  Text('Knockout stage will begin after Matchday 3', style: TextStyle(color: AppConstants.secondaryTextColor)),
                 ],
               ),
             );
           }
-          return _buildBracket(matches);
+          return _buildMenu(context, matches);
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppConstants.primaryColor),
-        ),
-        error: (_, __) => const Center(
-          child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh'),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor)),
+        error: (_, __) => const Center(child: EmptyState(icon: Icons.wifi_off, title: 'Connection error', subtitle: 'Pull to refresh')),
       ),
     );
   }
 
-  Widget _buildBracket(List<MatchModel> matches) {
-    final confirmedMatches = matches.where((m) => m.status == 'scheduled').toList();
-    final pendingMatches = matches.where((m) => m.status == 'pending').toList();
+  Widget _buildMenu(BuildContext context, List<dynamic> matches) {
+    final r32 = matches.where((m) => m.stage == 'round_of_32').length;
+    final r16 = matches.where((m) => m.stage == 'round_of_16').length;
+    final qf = matches.where((m) => m.stage == 'quarter_final').length;
+    final sf = matches.where((m) => m.stage == 'semi_final').length;
+    final fin = matches.where((m) => m.stage == 'final').length;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (confirmedMatches.isNotEmpty) ...[
-          _buildSectionHeader('Confirmed Fixtures', Icons.check_circle, AppConstants.secondaryColor),
-          const SizedBox(height: 12),
-          ...confirmedMatches.map((match) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildMatchCard(match, isConfirmed: true),
-          )),
-          const SizedBox(height: 24),
-        ],
-        if (pendingMatches.isNotEmpty) ...[
-          _buildSectionHeader('Pending Qualifiers', Icons.hourglass_empty, AppConstants.secondaryTextColor),
-          const SizedBox(height: 12),
-          ...pendingMatches.map((match) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildMatchCard(match, isConfirmed: false),
-          )),
-        ],
+        _menuCard(
+          context,
+          icon: Icons.account_tree,
+          title: 'Tournament Bracket',
+          subtitle: 'View the full knockout tree',
+          color: AppConstants.primaryColor,
+          onTap: () => context.push('/bracket-tree'),
+        ),
+        const SizedBox(height: 16),
+        _menuCard(
+          context,
+          icon: Icons.sports,
+          title: 'Round of 32',
+          subtitle: '$r32 matches',
+          color: AppConstants.secondaryColor,
+          onTap: () => context.push('/bracket-tree'),
+        ),
+        const SizedBox(height: 12),
+        if (r16 > 0) _menuCard(context, icon: Icons.sports, title: 'Round of 16', subtitle: '$r16 matches', color: AppConstants.secondaryColor, onTap: () => context.push('/bracket-tree')),
+        if (r16 > 0) const SizedBox(height: 12),
+        if (qf > 0) _menuCard(context, icon: Icons.sports, title: 'Quarter-Finals', subtitle: '$qf matches', color: AppConstants.secondaryColor, onTap: () => context.push('/bracket-tree')),
+        if (qf > 0) const SizedBox(height: 12),
+        if (sf > 0) _menuCard(context, icon: Icons.sports, title: 'Semi-Finals', subtitle: '$sf matches', color: AppConstants.secondaryColor, onTap: () => context.push('/bracket-tree')),
+        if (sf > 0) const SizedBox(height: 12),
+        if (fin > 0) _menuCard(context, icon: Icons.emoji_events, title: 'Final', subtitle: '1 match', color: const Color(0xFFFFD700), onTap: () => context.push('/bracket-tree')),
       ],
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, Color color) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-      ],
-    ).animate().fadeIn(duration: 300.ms);
-  }
-
-  Widget _buildMatchCard(MatchModel match, {required bool isConfirmed}) {
-    final isHomeWinner = match.status == 'finished' && match.homeScore > match.awayScore;
-    final isAwayWinner = match.status == 'finished' && match.awayScore > match.homeScore;
-    final isTBD = match.homeTeam == null || match.awayTeam == null;
-
+  Widget _menuCard(BuildContext context, {required IconData icon, required String title, required String subtitle, required Color color, required VoidCallback onTap}) {
     return GestureDetector(
-      onTap: () => context.push('/match/${match.id}'),
-      child: GlassmorphismCard(
-        borderColor: isConfirmed
-            ? AppConstants.secondaryColor.withValues(alpha: 0.3)
-            : AppConstants.secondaryTextColor.withValues(alpha: 0.2),
-        child: Column(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppConstants.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
           children: [
-            if (match.date != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.calendar_today, size: 12, color: AppConstants.secondaryTextColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      DateFormat('EEE, MMM d').format(match.date),
-                      style: const TextStyle(
-                        color: AppConstants.secondaryTextColor,
-                        fontSize: 11,
-                      ),
-                    ),
-                    if (match.time != null) ...[
-                      const SizedBox(width: 8),
-                      Icon(Icons.access_time, size: 12, color: AppConstants.secondaryTextColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        match.time!,
-                        style: const TextStyle(
-                          color: AppConstants.secondaryTextColor,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            _buildTeamRow(
-              team: match.homeTeam,
-              teamName: match.homeTeam?.name ?? 'TBD',
-              flag: match.homeTeam?.flag,
-              score: match.homeScore,
-              isWinner: isHomeWinner,
-              isConfirmed: isConfirmed,
-              isTBD: match.homeTeam == null,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Row(
+            Icon(icon, color: color, size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Divider(color: AppConstants.cardColor)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      'VS',
-                      style: TextStyle(
-                        color: AppConstants.secondaryTextColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: AppConstants.cardColor)),
+                  Text(title, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: const TextStyle(color: AppConstants.secondaryTextColor, fontSize: 13)),
                 ],
               ),
             ),
-            _buildTeamRow(
-              team: match.awayTeam,
-              teamName: match.awayTeam?.name ?? 'TBD',
-              flag: match.awayTeam?.flag,
-              score: match.awayScore,
-              isWinner: isAwayWinner,
-              isConfirmed: isConfirmed,
-              isTBD: match.awayTeam == null,
-            ),
-            if (match.venue != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.location_on, size: 12, color: AppConstants.secondaryTextColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      match.venue!.name,
-                      style: const TextStyle(
-                        color: AppConstants.secondaryTextColor,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms);
-  }
-
-  Widget _buildTeamRow({
-    TeamModel? team,
-    required String teamName,
-    String? flag,
-    required int score,
-    required bool isWinner,
-    required bool isConfirmed,
-    required bool isTBD,
-  }) {
-    final opacity = isTBD ? 0.5 : 1.0;
-
-    return Opacity(
-      opacity: opacity,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: isWinner
-            ? BoxDecoration(
-                color: AppConstants.secondaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              )
-            : null,
-        child: Row(
-          children: [
-            if (!isTBD)
-              TeamFlag(imageUrl: flag, teamName: teamName, size: 28)
-            else
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppConstants.cardColor,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Icon(Icons.question_mark, size: 16, color: AppConstants.secondaryTextColor),
-              ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                isTBD ? 'TBD' : teamName,
-                style: TextStyle(
-                  color: isWinner
-                      ? AppConstants.secondaryColor
-                      : isTBD
-                          ? AppConstants.secondaryTextColor
-                          : Colors.white,
-                  fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (!isTBD)
-              Text(
-                '$score',
-                style: TextStyle(
-                  color: isWinner ? AppConstants.secondaryColor : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              )
-            else
-              const Text(
-                '-',
-                style: TextStyle(
-                  color: AppConstants.secondaryTextColor,
-                  fontSize: 16,
-                ),
-              ),
+            Icon(Icons.chevron_right, color: color),
           ],
         ),
       ),
