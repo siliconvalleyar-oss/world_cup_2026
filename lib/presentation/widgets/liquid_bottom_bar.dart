@@ -76,7 +76,7 @@ class LiquidBottomBar extends StatelessWidget {
     _NavItem(icon: Icons.calendar_month_rounded, labelEn: 'Fixture', labelEs: 'Calendario'),
     _NavItem(icon: Icons.leaderboard_rounded, labelEn: 'Standings', labelEs: 'Posiciones'),
     _NavItem(icon: Icons.groups_rounded, labelEn: 'Teams', labelEs: 'Equipos'),
-    _NavItem(icon: Icons.more_horiz_rounded, labelEn: 'More', labelEs: 'Más'),
+    _NavItem(icon: Icons.account_tree_rounded, labelEn: 'Bracket', labelEs: 'Arbol'),
   ];
 
   Widget _buildItem({

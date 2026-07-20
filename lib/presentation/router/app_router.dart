@@ -50,6 +50,18 @@ final appRouter = GoRouter(
           ),
         ),
         GoRoute(
+          path: '/teams',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: TeamsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/bracket-tree',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: BracketTreeScreen(),
+          ),
+        ),
+        GoRoute(
           path: '/favorites',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: FavoritesScreen(),
@@ -158,8 +170,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
     if (location.startsWith('/fixture')) return 1;
     if (location.startsWith('/standings')) return 2;
     if (location.startsWith('/teams')) return 3;
-    if (location.startsWith('/favorites')) return 3;
-    if (location.startsWith('/settings')) return 4;
+    if (location.startsWith('/bracket-tree')) return 4;
     return 0;
   }
 
@@ -172,9 +183,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
       case 2:
         context.go('/standings');
       case 3:
-        context.go('/favorites');
+        context.go('/teams');
       case 4:
-        context.go('/settings');
+        context.go('/bracket-tree');
     }
   }
 }

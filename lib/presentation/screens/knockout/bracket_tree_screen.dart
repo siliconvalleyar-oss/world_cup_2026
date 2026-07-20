@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:world_cup_2026/core/constants/app_constants.dart';
+import 'package:world_cup_2026/data/models/group_model.dart';
 import 'package:world_cup_2026/data/models/match_model.dart';
-import 'package:world_cup_2026/data/models/team_model.dart';
-import 'package:world_cup_2026/presentation/providers/match_provider.dart';
+import 'package:world_cup_2026/data/models/standing_model.dart';
+import 'package:world_cup_2026/presentation/providers/standing_provider.dart';
 import 'package:world_cup_2026/presentation/widgets/team_flag.dart';
 
 class BracketTreeScreen extends ConsumerStatefulWidget {
@@ -23,59 +24,29 @@ class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final matchesAsync = ref.watch(knockoutMatchesProvider);
+    final groupsAsync = ref.watch(groupListProvider);
 
     return Scaffold(
       backgroundColor: AppConstants.backgroundColor,
-      appBar: AppBar(
-        backgroundColor: AppConstants.backgroundColor,
-        title: const Text('Tournament Bracket', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: matchesAsync.when(
-        data: (matches) {
-          if (matches.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.account_tree, size: 64, color: AppConstants.secondaryTextColor),
-                  SizedBox(height: 16),
-                  Text('No knockout matches yet', style: TextStyle(color: AppConstants.secondaryTextColor, fontSize: 18)),
-                ],
-              ),
-            );
+      body: groupsAsync.when(
+        data: (groups) {
+          if (groups.isEmpty) {
+            return const Center(child: Text('Loading standings...', style: TextStyle(color: AppConstants.secondaryTextColor)));
           }
-          return _buildBracket(matches);
+          return _buildBracketFromStandings(groups);
         },
         loading: () => const Center(child: CircularProgressIndicator(color: AppConstants.primaryColor)),
-        error: (_, __) => const Center(child: Text('Error', style: TextStyle(color: AppConstants.secondaryTextColor))),
+        error: (_, __) => const Center(child: Text('Error loading data', style: TextStyle(color: AppConstants.secondaryTextColor))),
       ),
     );
   }
 
-  Widget _buildBracket(List<MatchModel> allMatches) {
-    final r32 = allMatches.where((m) => m.stage == 'round_of_32').toList();
-    final r16 = allMatches.where((m) => m.stage == 'round_of_16').toList();
-    final qf = allMatches.where((m) => m.stage == 'quarter_final').toList();
-    final sf = allMatches.where((m) => m.stage == 'semi_final').toList();
-    final finalMatch = allMatches.where((m) => m.stage == 'final').toList();
-    final thirdMatch = allMatches.where((m) => m.stage == 'third_place').toList();
-
-    if (r32.length < 16) {
-      return const Center(child: Text('Bracket not ready', style: TextStyle(color: AppConstants.secondaryTextColor)));
-    }
-
-    final lR32 = r32.sublist(0, 8);
-    final rR32 = r32.sublist(8, 16);
-    final lR16 = r16.length >= 4 ? r16.sublist(0, 4) : List<MatchModel>.filled(4, _emptyMatch('R16_pending'));
-    final rR16 = r16.length >= 8 ? r16.sublist(4, 8) : List<MatchModel>.filled(4, _emptyMatch('R16_pending'));
-    final lQF = qf.length >= 2 ? qf.sublist(0, 2) : List<MatchModel>.filled(2, _emptyMatch('QF_pending'));
-    final rQF = qf.length >= 4 ? qf.sublist(2, 4) : List<MatchModel>.filled(2, _emptyMatch('QF_pending'));
-    final lSF = sf.isNotEmpty ? sf[0] : _emptyMatch('SF_pending');
-    final rSF = sf.length >= 2 ? sf[1] : _emptyMatch('SF_pending');
-    final fin = finalMatch.isNotEmpty ? finalMatch[0] : _emptyMatch('FINAL_pending');
-    final third = thirdMatch.isNotEmpty ? thirdMatch[0] : _emptyMatch('THIRD_pending');
+  Widget _buildBracketFromStandings(List<GroupModel> groups) {
+    final bracket = _computeBracket(groups);
+    final leftBracket = bracket['left']!;
+    final rightBracket = bracket['right']!;
+    final finalMatch = bracket['final']![0];
+    final thirdMatch = bracket['third']![0];
 
     final ly = _yPos(8);
     final ly16 = _midY(4, ly);
@@ -91,24 +62,23 @@ class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
         ? (lySF[0] + rySF[0]) / 2
         : totalH / 2 - ch / 2;
     final thirdCY = finalCY + ch + 28;
-
     final totalW = 9 * colW + cw;
 
     return Column(
       children: [
         Container(
-          height: 32,
+          height: 36,
           color: AppConstants.backgroundColor,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             children: [
               _lbl('R32'), SizedBox(width: colW - 52),
               _lbl('R16'), SizedBox(width: colW - 52),
-              _lbl('QF'), SizedBox(width: colW - 40),
+              _lbl('CF'), SizedBox(width: colW - 40),
               _lbl('SF'), SizedBox(width: colW - 30),
               _lbl('FINAL'), SizedBox(width: colW - 20),
               _lbl('SF'), SizedBox(width: colW - 40),
-              _lbl('QF'), SizedBox(width: colW - 52),
+              _lbl('CF'), SizedBox(width: colW - 52),
               _lbl('R16'), SizedBox(width: colW - 52),
               _lbl('R32'),
             ],
@@ -128,22 +98,21 @@ class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
                   painter: _BracketPainter(
                     lR32Y: ly, lR16Y: ly16, lQFY: lyQF, lSFY: lySF,
                     rR32Y: ry, rR16Y: ry16, rQFY: ryQF, rSFY: rySF,
-                    finalY: finalCY,
-                    cw: cw, ch: ch, hGap: hGap, colW: colW,
+                    finalY: finalCY, cw: cw, ch: ch, hGap: hGap, colW: colW,
                     lineColor: AppConstants.secondaryTextColor.withValues(alpha: 0.25),
                   ),
                   child: Stack(
                     children: [
-                      for (int i = 0; i < 8; i++) _at(0, ly[i], lR32[i]),
-                      for (int i = 0; i < 4; i++) _at(1, ly16[i], lR16[i]),
-                      for (int i = 0; i < 2; i++) _at(2, lyQF[i], lQF[i]),
-                      _at(3, lySF.isNotEmpty ? lySF[0] : 0, lSF),
-                      _at(4, finalCY, fin, isFinal: true),
-                      _at(5, rySF.isNotEmpty ? rySF[0] : 0, rSF),
-                      for (int i = 0; i < 2; i++) _at(6, ryQF[i], rQF[i]),
-                      for (int i = 0; i < 4; i++) _at(7, ry16[i], rR16[i]),
-                      for (int i = 0; i < 8; i++) _at(8, ry[i], rR32[i]),
-                      _at(4, thirdCY, third, isThird: true),
+                      for (int i = 0; i < 8; i++) _at(0, ly[i], leftBracket[i]),
+                      for (int i = 0; i < 4; i++) _at(1, ly16[i], _emptyMatch('lR16_$i')),
+                      for (int i = 0; i < 2; i++) _at(2, lyQF[i], _emptyMatch('lQF_$i')),
+                      _at(3, lySF.isNotEmpty ? lySF[0] : 0, _emptyMatch('lSF')),
+                      _at(4, finalCY, finalMatch, isFinal: true),
+                      _at(5, rySF.isNotEmpty ? rySF[0] : 0, _emptyMatch('rSF')),
+                      for (int i = 0; i < 2; i++) _at(6, ryQF[i], _emptyMatch('rQF_$i')),
+                      for (int i = 0; i < 4; i++) _at(7, ry16[i], _emptyMatch('rR16_$i')),
+                      for (int i = 0; i < 8; i++) _at(8, ry[i], rightBracket[i]),
+                      _at(4, thirdCY, thirdMatch, isThird: true),
                     ],
                   ),
                 ),
@@ -155,13 +124,90 @@ class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
     );
   }
 
-  List<double> _yPos(int n) => List.generate(n, (i) => i * (ch + vGap));
+  Map<String, List<MatchModel>> _computeBracket(List<GroupModel> groups) {
+    final groupMap = <String, List<StandingModel>>{};
+    for (final g in groups) {
+      final sorted = List<StandingModel>.from(g.teams)
+        ..sort((a, b) {
+          final cmp = b.points.compareTo(a.points);
+          if (cmp != 0) return cmp;
+          final cmp2 = b.goalDifference.compareTo(a.goalDifference);
+          if (cmp2 != 0) return cmp2;
+          return b.goalsFor.compareTo(a.goalsFor);
+        });
+      groupMap[g.id] = sorted;
+    }
 
+    final first = <String, StandingModel>{};
+    final second = <String, StandingModel>{};
+    final third = <StandingModel>[];
+
+    for (final entry in groupMap.entries) {
+      final teams = entry.value;
+      if (teams.isNotEmpty) first[entry.key] = teams[0];
+      if (teams.length >= 2) second[entry.key] = teams[1];
+      if (teams.length >= 3) third.add(teams[2]);
+    }
+
+    third.sort((a, b) {
+      final cmp = b.points.compareTo(a.points);
+      if (cmp != 0) return cmp;
+      final cmp2 = b.goalDifference.compareTo(a.goalDifference);
+      if (cmp2 != 0) return cmp2;
+      return b.goalsFor.compareTo(a.goalsFor);
+    });
+    final bestThird = third.take(8).toList();
+
+    StandingModel? findFirst(String group) => first[group];
+    StandingModel? findSecond(String group) => second[group];
+    StandingModel? findThird(int index) => index < bestThird.length ? bestThird[index] : null;
+
+    MatchModel buildMatch(String id, StandingModel? home, StandingModel? away, String stage) {
+      return MatchModel(
+        id: id,
+        homeTeamId: home?.teamId ?? '',
+        awayTeamId: away?.teamId ?? '',
+        homeTeam: home?.team,
+        awayTeam: away?.team,
+        date: DateTime(2026, 7, 1),
+        stage: stage,
+      );
+    }
+
+    final left = [
+      buildMatch('R32_01', findFirst('A'), findSecond('B'), 'round_of_32'),
+      buildMatch('R32_02', findFirst('C'), findSecond('D'), 'round_of_32'),
+      buildMatch('R32_03', findFirst('E'), findSecond('F'), 'round_of_32'),
+      buildMatch('R32_04', findFirst('G'), findSecond('H'), 'round_of_32'),
+      buildMatch('R32_05', findFirst('B'), findSecond('A'), 'round_of_32'),
+      buildMatch('R32_06', findFirst('D'), findSecond('C'), 'round_of_32'),
+      buildMatch('R32_07', findFirst('F'), findSecond('E'), 'round_of_32'),
+      buildMatch('R32_08', findFirst('H'), findSecond('G'), 'round_of_32'),
+    ];
+
+    final right = [
+      buildMatch('R32_09', findFirst('I'), findSecond('J'), 'round_of_32'),
+      buildMatch('R32_10', findFirst('K'), findSecond('L'), 'round_of_32'),
+      buildMatch('R32_11', findFirst('J'), findSecond('I'), 'round_of_32'),
+      buildMatch('R32_12', findFirst('L'), findSecond('K'), 'round_of_32'),
+      buildMatch('R32_13', findThird(0), findThird(1), 'round_of_32'),
+      buildMatch('R32_14', findThird(2), findThird(3), 'round_of_32'),
+      buildMatch('R32_15', findThird(4), findThird(5), 'round_of_32'),
+      buildMatch('R32_16', findThird(6), findThird(7), 'round_of_32'),
+    ];
+
+    final finalMatch = buildMatch('FINAL', null, null, 'final');
+    final thirdMatch = buildMatch('THIRD', null, null, 'third_place');
+
+    return {'left': left, 'right': right, 'final': [finalMatch], 'third': [thirdMatch]};
+  }
+
+  List<double> _yPos(int n) => List.generate(n, (i) => i * (ch + vGap));
   List<double> _midY(int n, List<double> py) =>
       List.generate(n, (i) => (py[i * 2] + py[i * 2 + 1]) / 2);
 
   MatchModel _emptyMatch(String id) => MatchModel(
-    id: id, homeTeamId: '', awayTeamId: '', date: DateTime(2026, 7, 10), stage: 'round_of_32',
+    id: id, homeTeamId: '', awayTeamId: '', date: DateTime(2026, 7, 10), stage: 'round_of_16',
   );
 
   Widget _lbl(String t) => Text(t, style: const TextStyle(color: AppConstants.primaryColor, fontSize: 10, fontWeight: FontWeight.bold));
@@ -178,7 +224,11 @@ class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
     final w = isFinal ? cw + 12 : cw;
     final h = isFinal ? ch + 12 : (isThird ? ch - 2 : ch);
 
-    final bc = isFinal ? const Color(0xFFFFD700) : isThird ? AppConstants.primaryColor.withValues(alpha: 0.5) : AppConstants.secondaryColor.withValues(alpha: 0.2);
+    final bc = isFinal
+        ? const Color(0xFFFFD700)
+        : isThird
+            ? AppConstants.primaryColor.withValues(alpha: 0.5)
+            : AppConstants.secondaryColor.withValues(alpha: 0.2);
 
     return GestureDetector(
       onTap: () => context.push('/match/${m.id}'),
@@ -197,17 +247,17 @@ class _BracketTreeScreenState extends ConsumerState<BracketTreeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _row(m.homeTeam, m.homeTeam?.name ?? (hasH ? '' : 'TBD'), m.homeTeam?.flag, m.homeScore, hw, hasH, finished),
+            _row(m.homeTeam?.name ?? (hasH ? '' : 'TBD'), m.homeTeam?.flag, m.homeScore, hw, hasH, finished),
             Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 1), color: AppConstants.secondaryTextColor.withValues(alpha: 0.15)),
-            _row(m.awayTeam, m.awayTeam?.name ?? (hasA ? '' : 'TBD'), m.awayTeam?.flag, m.awayScore, aw, hasA, finished),
+            _row(m.awayTeam?.name ?? (hasA ? '' : 'TBD'), m.awayTeam?.flag, m.awayScore, aw, hasA, finished),
           ],
         ),
       ),
     );
   }
 
-  Widget _row(TeamModel? t, String name, String? flag, int score, bool win, bool filled, bool fin) {
-    final empty = name.isEmpty || name == 'TBD';
+  Widget _row(String name, String? flag, int score, bool win, bool filled, bool fin) {
+    final empty = name.isEmpty;
     return Row(
       children: [
         if (!empty && flag != null)
@@ -255,11 +305,6 @@ class _BracketPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    _drawLeftBracket(canvas, p);
-    _drawRightBracket(canvas, p);
-  }
-
-  void _drawLeftBracket(Canvas canvas, Paint p) {
     for (int i = 0; i < 4; i++) {
       _leftConn(canvas, p, 0, lR32Y[i * 2], lR32Y[i * 2 + 1], lR16Y[i]);
     }
@@ -271,16 +316,14 @@ class _BracketPainter extends CustomPainter {
     }
     if (lSFY.isNotEmpty) {
       final x1 = 3 * colW + cw;
-      final x2 = x1 + hGap / 2;
+      final mx = x1 + hGap / 2;
       final y = lSFY[0] + ch / 2;
       final fy = finalY + (ch + 12) / 2;
-      canvas.drawLine(Offset(x1, y), Offset(x2, y), p);
-      canvas.drawLine(Offset(x2, y), Offset(x2, fy), p);
-      canvas.drawLine(Offset(x2, fy), Offset(4 * colW, fy), p);
+      canvas.drawLine(Offset(x1, y), Offset(mx, y), p);
+      canvas.drawLine(Offset(mx, y), Offset(mx, fy), p);
+      canvas.drawLine(Offset(mx, fy), Offset(4 * colW, fy), p);
     }
-  }
 
-  void _drawRightBracket(Canvas canvas, Paint p) {
     for (int i = 0; i < 4; i++) {
       _rightConn(canvas, p, 8, rR32Y[i * 2], rR32Y[i * 2 + 1], rR16Y[i]);
     }
@@ -292,12 +335,12 @@ class _BracketPainter extends CustomPainter {
     }
     if (rSFY.isNotEmpty) {
       final x1 = 5 * colW;
-      final x2 = x1 - hGap / 2;
+      final mx = x1 - hGap / 2;
       final y = rSFY[0] + ch / 2;
       final fy = finalY + (ch + 12) / 2;
-      canvas.drawLine(Offset(x1, y), Offset(x2, y), p);
-      canvas.drawLine(Offset(x2, y), Offset(x2, fy), p);
-      canvas.drawLine(Offset(x2, fy), Offset(5 * colW, fy), p);
+      canvas.drawLine(Offset(x1, y), Offset(mx, y), p);
+      canvas.drawLine(Offset(mx, y), Offset(mx, fy), p);
+      canvas.drawLine(Offset(mx, fy), Offset(5 * colW, fy), p);
     }
   }
 
