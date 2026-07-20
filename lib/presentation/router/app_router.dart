@@ -168,9 +168,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/home')) return 0;
     if (location.startsWith('/fixture')) return 1;
-    if (location.startsWith('/standings')) return 2;
-    if (location.startsWith('/teams')) return 3;
-    if (location.startsWith('/bracket-tree')) return 4;
+    if (location.startsWith('/bracket-tree')) return 2;
+    if (location.startsWith('/standings')) return 3;
+    if (location.startsWith('/teams')) return 4;
     return 0;
   }
 
@@ -181,11 +181,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
       case 1:
         context.go('/fixture');
       case 2:
-        context.go('/standings');
-      case 3:
-        context.go('/teams');
-      case 4:
         context.go('/bracket-tree');
+      case 3:
+        context.go('/standings');
+      case 4:
+        context.go('/teams');
     }
   }
 }
